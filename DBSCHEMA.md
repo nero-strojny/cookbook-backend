@@ -1,5 +1,5 @@
 
-
+    recipeID: string
     recipeName: string
 
     createdDate: timestamp
@@ -13,9 +13,9 @@
 
     author: string
 
-    preptime: number
+    prepTime: number
 
-    cooktime: number
+    cookTime: number
 
     steps: Array
         number: number
