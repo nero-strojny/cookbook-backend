@@ -1,17 +1,17 @@
 package controller
 
-import(
+import (
 	"../models"
 )
 
 //Get a recipe by its ID
-func Get(id int) {
+func Get(recipeId string) {
 
 }
 
 //Delete a recipe by its ID. This does not permanently delete and instead marks the recipe to be hidden
 //so that it can be restored if necessary
-func Delete(id int) {
+func Delete(recipeId string) {
 
 }
 
@@ -21,6 +21,6 @@ func Create(recipe models.Recipe) {
 }
 
 //Update an existing recipe by its id
-func Update(id int, updatedRecipe models.Recipe) {
+func Update(recipeId string, updatedRecipe models.Recipe) {
 
 }
