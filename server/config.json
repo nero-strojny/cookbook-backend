@@ -1,0 +1,3 @@
+{
+    "connectionString": "mongodb+srv://admin:<password>@cookbook-tu2hn.mongodb.net/recipesTable?retryWrites=true&w=majority"
+}

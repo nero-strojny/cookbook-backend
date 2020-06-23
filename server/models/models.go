@@ -5,6 +5,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 // Recipe is used to marshal and unmarshal from a document database
 type Recipe struct {
 	RecipeID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	RecipeName      string             `json:"recipeName,omitempty"`
 	CreatedDate     string             `json:"createdDate,omitempty"`
 	LastUpdatedDate string             `json:"lastUpdatedDate,omitempty"`
 	Ingredients     []ingredient       `json:"ingredients,omitempty"`
