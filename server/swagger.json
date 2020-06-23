@@ -1,0 +1,291 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Cookbook",
+        "description": "API for Virtual Cookbook",
+        "version": "1.0.0"
+    },
+    "basePath": "/api",
+    "schemes": [
+        "http"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/recipes": {
+            "get": {
+                "description": "Returns all recipes",
+                "operationId": "getAllRecipes",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recipe Response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Recipe"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/recipe": {
+            "post": {
+                "description": "Creates a new recipe",
+                "operationId": "createRecipe",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "recipe",
+                        "in": "body",
+                        "description": "Recipe to add",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewRecipe"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recipe Response",
+                        "schema": {
+                            "$ref": "#/definitions/Recipe"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/recipe/{id}": {
+            "get": {
+                "description": "Returns a recipe based on a single ID",
+                "operationId": "getRecipeById",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "recipeID",
+                        "in": "path",
+                        "description": "ID of recipe to fetch",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recipe Response",
+                        "schema": {
+                            "$ref": "#/definitions/Recipe"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorModel"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a single recipe based on the ID supplied",
+                "operationId": "deleteRecipe",
+                "parameters": [
+                    {
+                        "name": "recipeID",
+                        "in": "path",
+                        "description": "ID of recipe to delete",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Recipe Deleted"
+                    },
+                    "default": {
+                        "description": "Unexpected Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorModel"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a recipe",
+                "operationId": "putRecipe",
+                "parameters": [
+                    {
+                        "name": "recipeID",
+                        "in": "path",
+                        "description": "ID of recipe to update",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "recipe",
+                        "in": "body",
+                        "description": "New recipe to change old one to",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewRecipe"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Recipe Deleted"
+                    },
+                    "default": {
+                        "description": "Unexpected Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorModel"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "Recipe": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/NewRecipe"
+                },
+                {
+                    "required": [
+                        "recipeID"
+                    ],
+                    "properties": {
+                        "recipeID": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "unique id to identify the recipe"
+                        },
+                        "createdDate": {
+                            "type": "string",
+                            "description": "creation date of the recipe"
+                        },
+                        "lastUpdatedDate": {
+                            "type": "string",
+                            "description": "last updated date of the recipe"
+                        }
+                    }
+                }
+            ]
+        },
+        "NewRecipe": {
+            "type": "object",
+            "required": [
+                "recipeName"
+            ],
+            "properties": {
+                "author": {
+                    "type": "string",
+                    "description": "user that created/inputted the recipe"
+                },
+                "recipeName": {
+                    "type": "string",
+                    "description": "name of the recipe"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "description": "list of ingredients in recipe",
+                    "items": {
+                        "$ref": "#/definitions/Ingredient"
+                    }
+                },
+                "steps": {
+                    "type": "array",
+                    "description": "list of steps to create recipe",
+                    "items": {
+                        "$ref": "#/definitions/Step"
+                    }
+                },
+                "prepTime": {
+                    "type": "integer",
+                    "description": "the amount of time to prep this recipe in minutes"
+                },
+                "cookTime": {
+                    "type": "integer",
+                    "description": "the amount of time to cook this recipe in minutes"
+                }
+            }
+        },
+        "Step": {
+            "type": "object",
+            "required": [
+                "number",
+                "text"
+            ],
+            "properties": {
+                "number": {
+                    "type": "integer",
+                    "description": "step number"
+                },
+                "text": {
+                    "type": "string",
+                    "description": "description of the step"
+                }
+            }
+        },
+        "Ingredient": {
+            "type": "object",
+            "required": [
+                "name",
+                "amount"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "name of the ingredient"
+                },
+                "amount": {
+                    "type": "integer",
+                    "description": "amount of ingredient to add to recipe"
+                },
+                "measurement": {
+                    "type": "string",
+                    "description": "unit of measurement defining the amount, defaults to a single unit of the ingredient (e.g. 1 apple)"
+                }
+            }
+        },
+        "ErrorModel": {
+            "type": "object",
+            "required": [
+                "code",
+                "message"
+            ],
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

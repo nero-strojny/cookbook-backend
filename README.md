@@ -4,5 +4,5 @@
 
 ## Requirements:
 
-`go get go.mongodb.org/mongo-driver`
+`go get go.mongodb.org/mongo-driver/mongo`
 `go get -u github.com/gorilla/mux`
