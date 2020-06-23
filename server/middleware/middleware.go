@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"../controller"
-	"../models"
+	"server/controller"
+	"server/models"
 	"github.com/gorilla/mux"
 )
 
