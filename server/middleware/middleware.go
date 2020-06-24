@@ -51,7 +51,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	//Might need to change this to take the new recipe
 	params := mux.Vars(r)
 	var recipe models.Recipe
-	_ = json.NewDecoder(r.Body).Decode(&recipe)
+	json.NewDecoder(r.Body).Decode(&recipe)
 	controller.Update(params["id"], recipe)
 	json.NewEncoder(w).Encode(params["id"])
 }
@@ -60,11 +60,10 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "PUT")
+	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	params := mux.Vars(r)
 	controller.Delete(params["id"])
 	json.NewEncoder(w).Encode(params["id"])
-	// json.NewEncoder(w).Encode("Task not found")
 
 }

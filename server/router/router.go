@@ -13,7 +13,7 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/recipes", middleware.GetAllRecipes).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/recipe/{id}", middleware.GetRecipe).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/recipe", middleware.CreateRecipe).Methods("POST", "OPTIONS")
-	router.HandleFunc("/api/recipe/{id}", middleware.DeleteRecipe).Methods("PATCH", "OPTIONS")
+	router.HandleFunc("/api/recipe/{id}", middleware.DeleteRecipe).Methods("DELETE", "OPTIONS")
 	router.HandleFunc("/api/recipe/{id}", middleware.UpdateRecipe).Methods("PUT", "OPTIONS")
 	return router
 }
