@@ -106,15 +106,13 @@ func Get(recipeID string) models.Recipe {
 
 //Delete a recipe by its ID. This does not permanently delete and instead marks the recipe to be hidden
 //so that it can be restored if necessary
-func Delete(recipeID string) int64 {
-	// temporarily here to clean up tests
+func Delete(recipeID string) {
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
-	d, err := collection.DeleteOne(context.Background(), filter)
+	_, err := collection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return d.DeletedCount
 }
 
 //Create a new recipe
@@ -130,5 +128,13 @@ func Create(recipe models.Recipe) models.Recipe {
 
 //Update an existing recipe by its id
 func Update(recipeID string, updatedRecipe models.Recipe) {
+	id, _ := primitive.ObjectIDFromHex(recipeID)
+	filter := bson.M{"_id": id}
+	//Could do this as an update but that requires checking what fields are different between recipes
+	//Could be a hassle with a long list of ingredients or measurements. Easier to just replace the entire recipe with the new update
+	_, err := collection.ReplaceOne(context.Background(), filter, updatedRecipe)
 
+	if err != nil {
+		log.Fatal(err)
+	}
 }
