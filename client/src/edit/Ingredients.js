@@ -1,0 +1,122 @@
+import React from "react";
+import { Form, Grid, Button, Icon } from "semantic-ui-react";
+
+function Ingredients({ currentIngredients, setCurrentIngredients }) {
+    
+  function changeIngredientValue(indexSelected, keySelected, valueInput) {
+    const tempIngredients = [...currentIngredients];
+    tempIngredients[indexSelected][keySelected] = valueInput;
+    setCurrentIngredients(tempIngredients);
+  }
+
+  function createIngredients() {
+    let ingredientInputs = [
+      <Grid.Row columns="equal">
+        <Grid.Column>
+          <Form.Field>
+            <label>Amount</label>
+            <input
+              defaultValue={
+                currentIngredients.length >= 1
+                  ? currentIngredients[0].amount
+                  : ""
+              }
+              onChange={(event) =>
+                changeIngredientValue(0, "amount", event.target.value)
+              }
+            />
+          </Form.Field>
+        </Grid.Column>
+        <Grid.Column>
+          <Form.Field>
+            <label>Measurement</label>
+            <input
+              defaultValue={
+                currentIngredients.length >= 1
+                  ? currentIngredients[0].measurement
+                  : ""
+              }
+              onChange={(event) =>
+                changeIngredientValue(0, "measurement", event.target.value)
+              }
+            />
+          </Form.Field>
+        </Grid.Column>
+        <Grid.Column>
+          <Form.Field>
+            <label>Name</label>
+            <input
+              defaultValue={
+                currentIngredients.length >= 1 ? currentIngredients[0].name : ""
+              }
+              onChange={(event) =>
+                changeIngredientValue(0, "name", event.target.value)
+              }
+            />
+          </Form.Field>
+        </Grid.Column>
+      </Grid.Row>,
+    ];
+
+    for (let i = 1; i < currentIngredients.length; i++) {
+      ingredientInputs.push(
+        <Grid.Row columns="equal">
+          <Grid.Column>
+            <Form.Field>
+              <input
+                defaultValue={currentIngredients[i].amount}
+                onChange={(event) =>
+                  changeIngredientValue(i, "amount", event.target.value)
+                }
+              />
+            </Form.Field>
+          </Grid.Column>
+          <Grid.Column>
+            <Form.Field>
+              <input
+                defaultValue={currentIngredients[i].measurement}
+                onChange={(event) =>
+                  changeIngredientValue(i, "measurement", event.target.value)
+                }
+              />
+            </Form.Field>
+          </Grid.Column>
+          <Grid.Column>
+            <Form.Field>
+              <input
+                defaultValue={currentIngredients[i].name}
+                onChange={(event) =>
+                  changeIngredientValue(i, "name", event.target.value)
+                }
+              />
+            </Form.Field>
+          </Grid.Column>
+        </Grid.Row>
+      );
+    }
+    return ingredientInputs;
+  }
+
+  return (
+    <Form>
+      <Grid>
+        <Grid.Row columns="equal">
+          <Grid.Column>
+            <h3>Ingredients</h3>
+          </Grid.Column>
+        </Grid.Row>
+        {createIngredients()}
+        <Grid.Row>
+          <Grid.Column>
+            <Button
+              onClick={() => setCurrentIngredients([...currentIngredients, {}])}
+            >
+              <Icon name="plus" /> Add Ingredient
+            </Button>
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+    </Form>
+  );
+}
+export default Ingredients;
