@@ -15,7 +15,7 @@ function ViewRecipes({
                 />
             </Grid.Column>
             <Grid.Column textAlign='right'>
-                <Button color='orange' onClick={onCreateRecipe}>
+                <Button color='orange' onClick={()=>onCreateRecipe()}>
                     <Icon name='plus' />New Recipe
                 </Button>
             </Grid.Column>
