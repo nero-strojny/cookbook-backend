@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Form, Divider, Grid, Button, Card } from "semantic-ui-react";
 import Steps from "./Steps";
 import Ingredients from "./Ingredients";
+import { createRecipe } from "../serviceCalls";
 
-function EditRecipe({ onBackToMyRecipes }) {
+function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
   const [recipeName, setRecipeName] = useState("");
   const [author, setAuthor] = useState("");
   const [steps, setSteps] = useState([""]);
@@ -11,25 +12,38 @@ function EditRecipe({ onBackToMyRecipes }) {
   const [cookTime, setCookTime] = useState(0);
   const [prepTime, setPrepTime] = useState(0);
   const [servings, setServings] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
-  function submitRecipe() {
-      const submittedSteps = []
-      for (let i = 0; i < steps.length; i++){
-          if(steps[i] !== ""){
-            submittedSteps.push({number: i + 1, text:steps[i]});
-          }
+  const submitRecipe = async () => {
+    const submittedSteps = [];
+    for (let i = 0; i < steps.length; i++) {
+      if (steps[i] !== "") {
+        submittedSteps.push({ number: i + 1, text: steps[i] });
       }
-      const recipe = {
-          recipeName,
-          author, 
-          cookTime,
-          prepTime,
-          servings,
-          ingredients,
-          steps: submittedSteps
+    }
+    const submittedIngredients = [];
+    for (let i = 0; i < ingredients.length; i++) {
+      if (
+        ingredients[i].name !== "" ||
+        ingredients[i].measurement !== "" ||
+        ingredients[i].amount !== ""
+      ) {
+        submittedIngredients.push(ingredients[i]);
       }
-      console.log("submitting recipe...", JSON.stringify(recipe));
-  }
+    }
+    setIsLoading(true);
+    await createRecipe({
+      recipeName,
+      author,
+      cookTime,
+      prepTime,
+      servings,
+      ingredients: submittedIngredients,
+      steps: submittedSteps,
+    });
+    setIsLoading(false);
+    onSuccessfulCreate(recipeName);
+  };
 
   return (
     <Grid padded>
@@ -46,7 +60,7 @@ function EditRecipe({ onBackToMyRecipes }) {
       <Grid.Row>
         <Grid.Column>
           <Card fluid>
-            <Card.Content> 
+            <Card.Content>
               <Form>
                 <Grid>
                   <Grid.Row columns="equal">
@@ -85,9 +99,12 @@ function EditRecipe({ onBackToMyRecipes }) {
                       <Form.Field>
                         <label>Prep Time (min)</label>
                         <input
+                          type="number"
                           placeholder={0}
                           defaultValue={prepTime}
-                          onChange={(event) => setPrepTime(event.target.value)}
+                          onChange={(event) =>
+                            setPrepTime(parseInt(event.target.value))
+                          }
                         />
                       </Form.Field>
                     </Grid.Column>
@@ -95,9 +112,12 @@ function EditRecipe({ onBackToMyRecipes }) {
                       <Form.Field>
                         <label>Cook Time (min)</label>
                         <input
+                          type="number"
                           placeholder={0}
                           defaultValue={cookTime}
-                          onChange={(event) => setCookTime(event.target.value)}
+                          onChange={(event) =>
+                            setCookTime(parseInt(event.target.value))
+                          }
                         />
                       </Form.Field>
                     </Grid.Column>
@@ -105,9 +125,12 @@ function EditRecipe({ onBackToMyRecipes }) {
                       <Form.Field>
                         <label>Servings</label>
                         <input
+                          type="number"
                           placeholder={0}
                           defaultValue={servings}
-                          onChange={(event) => setServings(event.target.value)}
+                          onChange={(event) =>
+                            setServings(parseInt(event.target.value))
+                          }
                         />
                       </Form.Field>
                     </Grid.Column>
@@ -123,7 +146,11 @@ function EditRecipe({ onBackToMyRecipes }) {
               <Steps currentSteps={steps} setCurrentSteps={setSteps} />
             </Card.Content>
             <Card.Content extra>
-              <Form.Button onClick={()=>submitRecipe()}>Submit</Form.Button>
+              {isLoading ? (
+                <Form.Button loading></Form.Button>
+              ) : (
+                <Form.Button onClick={() => submitRecipe()}>Submit</Form.Button>
+              )}
             </Card.Content>
           </Card>
         </Grid.Column>
