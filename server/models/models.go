@@ -13,6 +13,8 @@ type Recipe struct {
 	PrepTime        int                `json:"prepTime,omitempty"`
 	CookTime        int                `json:"cookTime,omitempty"`
 	Steps           []step             `json:"steps,omitempty"`
+	Rating          int                `json:"rating,omitempty"`
+	Servings        int                `json:"servings,omitempty"`
 }
 
 // Ingredient is a component of a recipe consisting of the name, amount, and the measurement for that amount (cups, tbsp, lbs, etc)

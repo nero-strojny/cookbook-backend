@@ -230,6 +230,14 @@
                 "cookTime": {
                     "type": "integer",
                     "description": "the amount of time to cook this recipe in minutes"
+                },
+                "rating": {
+                    "type": "integer",
+                    "description": "the rating for this recipe out of 5"
+                },
+                "servings": {
+                    "type": "integer",
+                    "description": "the amount of servings this recipe makes"
                 }
             }
         },
