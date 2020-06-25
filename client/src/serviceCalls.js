@@ -9,5 +9,12 @@ export const createRecipe = async (recipe) => {
       "Content-Type": "application/json",
     },
   });
-  console.log(response);
+};
+
+export const deleteRecipe = async (recipeId) => {
+  const response = await axios.delete(endpoint + `/api/recipe/${recipeId}`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 };

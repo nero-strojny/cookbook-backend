@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 
 	"server/models"
 
@@ -104,8 +105,7 @@ func Get(recipeID string) models.Recipe {
 	return result
 }
 
-//Delete a recipe by its ID. This does not permanently delete and instead marks the recipe to be hidden
-//so that it can be restored if necessary
+//Delete a recipe by its ID.
 func Delete(recipeID string) {
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
@@ -117,6 +117,9 @@ func Delete(recipeID string) {
 
 //Create a new recipe
 func Create(recipe models.Recipe) (invalidData []string, errorCode int) {
+	currentTime := time.Now()
+	recipe.CreatedDate = currentTime.Format("2006.01.02 15:04:05")
+	recipe.LastUpdatedDate = currentTime.Format("2006.01.02 15:04:05")
 	valid, invalidFields := validateRecipe(recipe)
 	if valid == false {
 		return invalidFields, 400
@@ -131,6 +134,8 @@ func Create(recipe models.Recipe) (invalidData []string, errorCode int) {
 
 //Update an existing recipe by its id
 func Update(recipeID string, updatedRecipe models.Recipe) {
+	currentTime := time.Now()
+	updatedRecipe.LastUpdatedDate = currentTime.Format("2006.01.02 15:04:05")
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
 	//Could do this as an update but that requires checking what fields are different between recipes
