@@ -116,14 +116,17 @@ func Delete(recipeID string) {
 }
 
 //Create a new recipe
-func Create(recipe models.Recipe) models.Recipe {
-	insertResult, err := collection.InsertOne(context.Background(), recipe)
+func Create(recipe models.Recipe) (invalidData []string, errorCode int) {
+	valid, invalidFields := validateRecipe(recipe)
+	if valid == false {
+		return invalidFields, 400
+	}
+	_, err := collection.InsertOne(context.Background(), recipe)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	idString := insertResult.InsertedID.(primitive.ObjectID).Hex()
-	return Get(idString)
+	return invalidFields, 204
 }
 
 //Update an existing recipe by its id
@@ -137,4 +140,17 @@ func Update(recipeID string, updatedRecipe models.Recipe) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func validateRecipe(recipe models.Recipe) (valid bool, invalidFields []string) {
+
+	if recipe.RecipeName == "" {
+		invalidFields = append(invalidFields, "recipeName")
+	}
+
+	if len(invalidFields) > 0 {
+		return false, invalidFields
+	} 
+		return true, invalidFields
+	
 }
