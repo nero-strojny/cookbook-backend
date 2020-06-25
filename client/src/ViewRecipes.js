@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Input, Grid, Button, Icon, Card, List } from "semantic-ui-react";
 import axios from "axios";
+import { deleteRecipe } from "./serviceCalls";
 
 function ViewRecipes({ onCreateRecipe }) {
   const [recipeState, setRecipeState] = useState({});
@@ -19,6 +20,10 @@ function ViewRecipes({ onCreateRecipe }) {
     const tempRecipes = { ...recipeState };
     tempRecipes[id].stepsVisible = !tempRecipes[id].stepsVisible;
     setRecipeState(tempRecipes);
+  }
+
+  const onDeleteRecipe = async (recipeId) => {
+    await deleteRecipe(recipeId);
   }
 
   useEffect(() => {
@@ -142,7 +147,7 @@ function ViewRecipes({ onCreateRecipe }) {
                     <Icon name="pencil" />
                     Edit{" "}
                   </a>
-                  <a>
+                  <a onClick={()=>onDeleteRecipe(r._id)}>
                     <Icon name="trash" />
                     Delete
                   </a>

@@ -147,9 +147,9 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
             </Card.Content>
             <Card.Content extra>
               {isLoading ? (
-                <Form.Button loading></Form.Button>
+                <Form.Button color='orange' loading></Form.Button>
               ) : (
-                <Form.Button onClick={() => submitRecipe()}>Submit</Form.Button>
+                <Form.Button color='orange' onClick={() => submitRecipe()}>Submit</Form.Button>
               )}
             </Card.Content>
           </Card>

@@ -10,7 +10,7 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
 
   function createIngredients() {
     let ingredientInputs = [
-      <Grid.Row columns="equal">
+      <Grid.Row columns="equal" key={"steps0"} >
         <Grid.Column>
           <Form.Field>
             <label>Amount</label>
@@ -60,7 +60,7 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
 
     for (let i = 1; i < currentIngredients.length; i++) {
       ingredientInputs.push(
-        <Grid.Row columns="equal">
+        <Grid.Row columns="equal" key={"steps" + i}>
           <Grid.Column>
             <Form.Field>
               <input

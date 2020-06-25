@@ -6,6 +6,7 @@ import (
 
 	"server/controller"
 	"server/models"
+
 	"github.com/gorilla/mux"
 )
 
@@ -56,7 +57,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(params["id"])
 }
 
-// DeleteRecipe controller PUT request
+// DeleteRecipe controller DELETE request
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

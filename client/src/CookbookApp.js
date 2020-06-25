@@ -31,7 +31,7 @@ function CookbookApp() {
         <Message
             onDismiss={() => handleDismiss()}
             header="Recipe created!"
-            content={`Recipe, ${newRecipeName}, has been added to the database`}
+            content={`Recipe, "${newRecipeName}", has been added to the database`}
           />
       </Transition>
       {showEditPage ? (
