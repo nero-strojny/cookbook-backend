@@ -2,7 +2,6 @@ import React from "react";
 import { Form, Grid, Button, Icon } from "semantic-ui-react";
 
 function Ingredients({ currentIngredients, setCurrentIngredients }) {
-    
   function changeIngredientValue(indexSelected, keySelected, valueInput) {
     const tempIngredients = [...currentIngredients];
     tempIngredients[indexSelected][keySelected] = valueInput;
@@ -16,13 +15,14 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
           <Form.Field>
             <label>Amount</label>
             <input
+              type="number"
               defaultValue={
                 currentIngredients.length >= 1
                   ? currentIngredients[0].amount
                   : ""
               }
               onChange={(event) =>
-                changeIngredientValue(0, "amount", event.target.value)
+                changeIngredientValue(0, "amount", parseFloat(event.target.value))
               }
             />
           </Form.Field>
@@ -64,9 +64,10 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
           <Grid.Column>
             <Form.Field>
               <input
+                type="number"
                 defaultValue={currentIngredients[i].amount}
                 onChange={(event) =>
-                  changeIngredientValue(i, "amount", event.target.value)
+                  changeIngredientValue(i, "amount", parseFloat(event.target.value))
                 }
               />
             </Form.Field>
