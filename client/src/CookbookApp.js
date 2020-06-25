@@ -5,6 +5,7 @@ import EditRecipe from "./edit/EditRecipe";
 
 function CookbookApp() {
   const [showEditPage, setShowEditPage] = useState(false);
+
   const [creationSuccess, setCreationSuccess] = useState(false);
   const [newRecipeName, setNewRecipeName] = useState("false");
 
