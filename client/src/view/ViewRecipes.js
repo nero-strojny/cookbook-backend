@@ -28,6 +28,10 @@ function ViewRecipes({ onCreateRecipe, onSuccessfulDelete, onEditRecipe }) {
     onSuccessfulDelete(recipe.recipename);
   }
 
+  function onRefreshRecipes() {
+
+  }
+
   return (
     <Grid padded>
       <Grid.Row columns="equal">
@@ -43,6 +47,27 @@ function ViewRecipes({ onCreateRecipe, onSuccessfulDelete, onEditRecipe }) {
             <Icon name="plus" />
             New Recipe
           </Button>
+        </Grid.Column>
+      </Grid.Row>
+      <Grid.Row>
+        <Grid.Column>
+            {shouldRefresh ?
+              (<p style={{ color: 'grey', cursor: 'pointer' }}>
+                <Icon
+                  loading
+                  color='grey'
+                  name="spinner"
+                ></Icon>{"\tRefresh Recipes"}
+              </p>) :
+              (<p style={{ color: 'grey', cursor: 'pointer' }} 
+                  onClick={() => setShouldRefresh(true)}>
+                  <Icon
+                    name="refresh"
+                    color='grey'
+                  ></Icon>{"\tRefresh Recipes"}
+              </p>
+             )
+            }
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>
