@@ -36,8 +36,8 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var recipe models.Recipe
 	_ = json.NewDecoder(r.Body).Decode(&recipe)
-	payload := controller.Create(recipe)
-	json.NewEncoder(w).Encode(payload)
+	_, code := controller.Create(recipe)
+	json.NewEncoder(w).Encode(code)
 }
 
 // UpdateRecipe controller PUT request
