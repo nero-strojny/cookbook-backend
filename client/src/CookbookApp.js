@@ -4,7 +4,7 @@ import ViewRecipes from "./ViewRecipes";
 import EditRecipe from "./edit/EditRecipe";
 
 function CookbookApp() {
-  const [showEditPage, setShowEditPage] = useState(true);
+  const [showEditPage, setShowEditPage] = useState(false);
 
   return (
     <Container fluid>
