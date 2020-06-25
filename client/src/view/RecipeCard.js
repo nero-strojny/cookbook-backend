@@ -7,6 +7,7 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
   const {
     recipename: recipeName,
     cooktime: cookTime,
+    preptime: prepTime,
     author,
     _id: recipeId,
     ingredients,
@@ -64,46 +65,36 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
   const createIngredients = () => {
     if (ingredientsVisible) {
       return (
-        <>
-          <Grid.Row>
-            <Grid.Column>
-              <h4>
-                <Icon
-                  style={{ cursor: 'pointer' }}
-                  name="minus"
-                  color='orange'
-                  onClick={() => setIngredientsVisible(false)}
-                ></Icon>
-                {"\tIngredients"}
-              </h4>
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row>
-            <Grid.Column>
-              <List bulleted>
-                {ingredients.map((ingredient) => (
-                  <List.Item key={"ingredient-" + ingredient.name + recipeId}>
-                    {ingredient.amount} {ingredient.measurement} of{" "}
-                    {ingredient.name}
-                  </List.Item>
-                ))}
-              </List>
-            </Grid.Column>
-          </Grid.Row>
-        </>
+        <Grid.Row>
+          <Grid.Column>
+            <h4>
+            <p style={{ cursor: 'pointer' }}
+              onClick={() => setIngredientsVisible(false)}>
+              <Icon name="minus" color='orange' ></Icon>
+              {"\tIngredients"}
+              </p>
+            </h4>
+            <List bulleted>
+              {ingredients.map((ingredient) => (
+                <List.Item key={"ingredient-" + ingredient.name + recipeId}>
+                  {ingredient.amount} {ingredient.measurement} of{" "}
+                  {ingredient.name}
+                </List.Item>
+              ))}
+            </List>
+          </Grid.Column>
+        </Grid.Row>
       )
     }
     return (
       <Grid.Row>
         <Grid.Column>
           <h4>
-            <Icon
-              style={{ cursor: 'pointer' }}
-              name="plus"
-              color='orange'
-              onClick={() => setIngredientsVisible(true)}
-            ></Icon>
-            {"\tIngredients ..."}
+            <p style={{ cursor: 'pointer' }}
+              onClick={() => setIngredientsVisible(true)}>
+              <Icon name="plus" color='orange' ></Icon>
+              {"\tIngredients ..."}
+            </p>
           </h4>
         </Grid.Column>
       </Grid.Row>
@@ -113,43 +104,32 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
   const createSteps = () => {
     if (stepsVisible) {
       return (
-        <>
-          <Grid.Row>
-            <Grid.Column>
-              <h4>
-                <Icon
-                  style={{ cursor: 'pointer' }}
-                  name="minus"
-                  color='orange'
-                  onClick={() => setStepsVisible(false)}
-                ></Icon>
-                {"\tSteps"}
-              </h4>
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row key={"viewStep" + recipeId}>
-            <Grid.Column>
-              <List ordered>
-                {steps.map((step) => (
-                  <List.Item key={"step-text-" + step.number + recipeId}>{step.text}</List.Item>
-                ))}
-              </List>
-            </Grid.Column>
-          </Grid.Row>
-        </>
+        <Grid.Row>
+          <Grid.Column>
+            <h4>
+              <p style={{ cursor: 'pointer' }}
+                onClick={() => setStepsVisible(false)}>
+                <Icon name="minus" color='orange' ></Icon>
+                {"\tSteps"}</p>
+            </h4>
+            <List ordered>
+              {steps.map((step) => (
+                <List.Item key={"step-text-" + step.number + recipeId}>{step.text}</List.Item>
+              ))}
+            </List>
+          </Grid.Column>
+        </Grid.Row>
       )
     }
     return (
       <Grid.Row>
         <Grid.Column>
           <h4>
-            <Icon
-              style={{ cursor: 'pointer' }}
-              name="plus"
-              color='orange'
-              onClick={() => setStepsVisible(true)}
-            ></Icon>
+            <p style={{ cursor: 'pointer' }}
+            onClick={() => setStepsVisible(true)}>
+              <Icon name="plus" color='orange' ></Icon>
             {"\tSteps ..."}
+            </p>
           </h4>
         </Grid.Column>
       </Grid.Row>
@@ -178,8 +158,8 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
             </Grid.Column>
             <Grid.Column >
               <Card.Meta textAlign='right'>
-                <div floated='right'>Cook Time: {cookTime} min</div>
-                <div>Servings: {servings}</div>
+                <div floated='right'>Total Time: {cookTime + prepTime} min</div>
+                <div style={{ marginRight: '0.3em' }}>Servings: {servings}</div>
               </Card.Meta>
             </Grid.Column>
           </Grid.Row>

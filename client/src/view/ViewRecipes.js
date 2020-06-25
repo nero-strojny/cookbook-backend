@@ -39,7 +39,7 @@ function ViewRecipes({ onCreateRecipe, onSuccessfulDelete, onEditRecipe }) {
           <Input
             fluid
             placeholder="Search Recipe"
-            icon={<Icon name="search" inverted circular link />}
+            icon={<Icon name="search" color='orange' inverted circular link />}
           />
         </Grid.Column>
         <Grid.Column textAlign="right">
