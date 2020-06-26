@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Header, Segment, Icon, Container, Message, Transition } from "semantic-ui-react";
 import ViewRecipes from "./view/ViewRecipes";
 import EditRecipe from "./edit/EditRecipe";
@@ -13,6 +13,15 @@ function CookbookApp() {
   const [deletedRecipeName, setDeletedRecipeName] = useState("");
   const [editedRecipeName, setEditedRecipeName] = useState("");
   const [recipeToEdit, setRecipeToEdit] = useState(defaultRecipe);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setEditSuccess(false);
+      setDeletionSuccess(false);
+      setCreationSuccess(false);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, [creationSuccess, deletionSuccess, editSuccess]);
 
   function handleSelectEditRecipe(recipe) {
     setRecipeToEdit(recipe);

@@ -9,6 +9,7 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
     cooktime: cookTime,
     preptime: prepTime,
     author,
+    calories,
     _id: recipeId,
     ingredients,
     steps,
@@ -62,23 +63,31 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
     return (starInputs);
   }
 
+  const getIngredientEntry = (name, amount, measurement) => {
+    if (!measurement && amount) {
+      return `${amount} ${name}`;
+    } else if (!measurement && !amount) {
+      return `some ${name}`;
+    }
+    return `${amount} ${measurement} of ${name}`;
+  }
+
   const createIngredients = () => {
     if (ingredientsVisible) {
       return (
         <Grid.Row>
           <Grid.Column>
             <h4>
-            <p style={{ cursor: 'pointer' }}
-              onClick={() => setIngredientsVisible(false)}>
-              <Icon name="minus" color='orange' ></Icon>
-              {"\tIngredients"}
+              <p style={{ cursor: 'pointer' }}
+                onClick={() => setIngredientsVisible(false)}>
+                <Icon name="minus" color='orange' ></Icon>
+                {"\tIngredients"}
               </p>
             </h4>
             <List bulleted>
               {ingredients.map((ingredient) => (
                 <List.Item key={"ingredient-" + ingredient.name + recipeId}>
-                  {ingredient.amount} {ingredient.measurement} of{" "}
-                  {ingredient.name}
+                  {getIngredientEntry(ingredient.name, ingredient.amount, ingredient.measurement)}
                 </List.Item>
               ))}
             </List>
@@ -126,9 +135,9 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
         <Grid.Column>
           <h4>
             <p style={{ cursor: 'pointer' }}
-            onClick={() => setStepsVisible(true)}>
+              onClick={() => setStepsVisible(true)}>
               <Icon name="plus" color='orange' ></Icon>
-            {"\tSteps ..."}
+              {"\tSteps ..."}
             </p>
           </h4>
         </Grid.Column>
@@ -154,6 +163,7 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
             <Grid.Column>
               <Card.Meta>
                 <div>By {author}</div>
+                {(calories !== null && calories !== 0) && <div>{calories} kCal/Serving</div>}
               </Card.Meta>
             </Grid.Column>
             <Grid.Column >
