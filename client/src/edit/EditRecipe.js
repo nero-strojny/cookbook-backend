@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import { Form, Divider, Grid, Button, Card } from "semantic-ui-react";
 import Steps from "./Steps";
 import Ingredients from "./Ingredients";
-import { createRecipe } from "../serviceCalls";
+import { createRecipe, updateRecipe } from "../serviceCalls";
 
-function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
-  const [recipeName, setRecipeName] = useState("");
-  const [author, setAuthor] = useState("");
-  const [steps, setSteps] = useState([""]);
-  const [ingredients, setIngredients] = useState([{}]);
-  const [cookTime, setCookTime] = useState(0);
-  const [prepTime, setPrepTime] = useState(0);
-  const [servings, setServings] = useState(0);
+function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate, onSuccessfulEdit, inputtedRecipe }) {
+  const [recipeName, setRecipeName] = useState(inputtedRecipe.recipename);
+  const [author, setAuthor] = useState(inputtedRecipe.author);
+  const [steps, setSteps] = useState(inputtedRecipe.steps.map(step => step.text));
+  const [ingredients, setIngredients] = useState(inputtedRecipe.ingredients);
+  const [cookTime, setCookTime] = useState(inputtedRecipe.cooktime);
+  const [prepTime, setPrepTime] = useState(inputtedRecipe.preptime);
+  const [servings, setServings] = useState(inputtedRecipe.servings);
   const [isLoading, setIsLoading] = useState(false);
 
   const submitRecipe = async () => {
@@ -31,18 +31,24 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
         submittedIngredients.push(ingredients[i]);
       }
     }
-    setIsLoading(true);
-    await createRecipe({
-      recipeName,
+    const submittedReport = {
+      ...inputtedRecipe,
+      recipename: recipeName,
       author,
-      cookTime,
-      prepTime,
+      cooktime: cookTime,
+      preptime: prepTime,
       servings,
       ingredients: submittedIngredients,
       steps: submittedSteps,
-    });
-    setIsLoading(false);
-    onSuccessfulCreate(recipeName);
+    };
+    setIsLoading(true);
+    if (inputtedRecipe._id) {
+      await updateRecipe(inputtedRecipe._id, submittedReport);
+      onSuccessfulEdit(recipeName);
+    } else {
+      await createRecipe(submittedReport);
+      onSuccessfulCreate(recipeName);
+    }
   };
 
   return (
@@ -100,7 +106,6 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
                         <label>Prep Time (min)</label>
                         <input
                           type="number"
-                          placeholder={0}
                           defaultValue={prepTime}
                           onChange={(event) =>
                             setPrepTime(parseInt(event.target.value))
@@ -113,7 +118,6 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
                         <label>Cook Time (min)</label>
                         <input
                           type="number"
-                          placeholder={0}
                           defaultValue={cookTime}
                           onChange={(event) =>
                             setCookTime(parseInt(event.target.value))
@@ -126,7 +130,6 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
                         <label>Servings</label>
                         <input
                           type="number"
-                          placeholder={0}
                           defaultValue={servings}
                           onChange={(event) =>
                             setServings(parseInt(event.target.value))
@@ -149,8 +152,8 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate }) {
               {isLoading ? (
                 <Form.Button color='orange' loading></Form.Button>
               ) : (
-                <Form.Button color='orange' onClick={() => submitRecipe()}>Submit</Form.Button>
-              )}
+                  <Form.Button color='orange' onClick={() => submitRecipe()}>Submit</Form.Button>
+                )}
             </Card.Content>
           </Card>
         </Grid.Column>
