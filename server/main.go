@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/handlers"
 
 	"server/router"
 )
