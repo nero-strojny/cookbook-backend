@@ -22,8 +22,7 @@ func GetAllRecipes(w http.ResponseWriter, r *http.Request) {
 // GetRecipe by ID controller GET request
 func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	params := mux.Vars(r)
 	payload := controller.Get(params["id"])
