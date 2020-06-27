@@ -16,7 +16,6 @@ export const getRecipes = async () =>{
 };
 
 export const updateRecipe = async (recipeId, recipe) => {
-  console.log(recipe);
   await axios.put(endpoint + `/api/recipe/${recipeId}`, recipe, {
     headers: {
       "Content-Type": "application/json",

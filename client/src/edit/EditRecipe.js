@@ -7,6 +7,7 @@ import { createRecipe, updateRecipe } from "../serviceCalls";
 function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate, onSuccessfulEdit, inputtedRecipe }) {
   const [recipeName, setRecipeName] = useState(inputtedRecipe.recipename);
   const [author, setAuthor] = useState(inputtedRecipe.author);
+  const [calories, setCalories] = useState(inputtedRecipe.author);
   const [steps, setSteps] = useState(inputtedRecipe.steps.map(step => step.text));
   const [ingredients, setIngredients] = useState(inputtedRecipe.ingredients);
   const [cookTime, setCookTime] = useState(inputtedRecipe.cooktime);
@@ -35,6 +36,7 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate, onSuccessfulEdit, i
       ...inputtedRecipe,
       recipename: recipeName,
       author,
+      calories,
       cooktime: cookTime,
       preptime: prepTime,
       servings,
@@ -96,6 +98,17 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate, onSuccessfulEdit, i
                           placeholder="Author"
                           defaultValue={author}
                           onChange={(event) => setAuthor(event.target.value)}
+                        />
+                      </Form.Field>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Form.Field>
+                        <label>Calories Per Serving</label>
+                        <input
+                          type="number"
+                          placeholder="kCal/serving"
+                          defaultValue={calories}
+                          onChange={(event) => setCalories(parseInt(event.target.value))}
                         />
                       </Form.Field>
                     </Grid.Column>
