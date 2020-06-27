@@ -7,7 +7,7 @@ import { createRecipe, updateRecipe } from "../serviceCalls";
 function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate, onSuccessfulEdit, inputtedRecipe }) {
   const [recipeName, setRecipeName] = useState(inputtedRecipe.recipename);
   const [author, setAuthor] = useState(inputtedRecipe.author);
-  const [calories, setCalories] = useState(inputtedRecipe.author);
+  const [calories, setCalories] = useState(inputtedRecipe.calories);
   const [steps, setSteps] = useState(inputtedRecipe.steps.map(step => step.text));
   const [ingredients, setIngredients] = useState(inputtedRecipe.ingredients);
   const [cookTime, setCookTime] = useState(inputtedRecipe.cooktime);
@@ -52,6 +52,18 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate, onSuccessfulEdit, i
       onSuccessfulCreate(recipeName);
     }
   };
+
+  const removeIngredient = (ingredientIndex) => {
+    const tempArray = [...ingredients];
+    tempArray.splice(ingredientIndex, 1);
+    setIngredients(tempArray);
+  }
+
+  const removeStep = (stepIndex) => {
+    const tempArray = [...steps];
+    tempArray.splice(stepIndex, 1);
+    setSteps(tempArray);
+  }
 
   return (
     <Grid padded>
@@ -157,9 +169,14 @@ function EditRecipe({ onBackToMyRecipes, onSuccessfulCreate, onSuccessfulEdit, i
               <Ingredients
                 currentIngredients={ingredients}
                 setCurrentIngredients={setIngredients}
+                onIngredientDelete={(ingredientIndex) => removeIngredient(ingredientIndex)}
               />
               <Divider />
-              <Steps currentSteps={steps} setCurrentSteps={setSteps} />
+              <Steps
+                currentSteps={steps}
+                setCurrentSteps={setSteps}
+                onStepDelete={(stepIndex) => removeStep(stepIndex)}
+              />
             </Card.Content>
             <Card.Content extra>
               {isLoading ? (

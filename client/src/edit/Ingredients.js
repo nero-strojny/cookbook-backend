@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Form, Grid, Button, Icon } from "semantic-ui-react";
 
-function Ingredients({ currentIngredients, setCurrentIngredients }) {
+function Ingredients({ currentIngredients, setCurrentIngredients, onIngredientDelete }) {
+
   function changeIngredientValue(indexSelected, keySelected, valueInput) {
     const tempIngredients = [...currentIngredients];
     tempIngredients[indexSelected][keySelected] = valueInput;
@@ -10,8 +11,8 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
 
   function createIngredients() {
     let ingredientInputs = [
-      <Grid.Row columns="equal" key={"steps0"} >
-        <Grid.Column>
+      <Grid.Row columns="equal" >
+        <Grid.Column width={4}>
           <Form.Field>
             <label>Amount</label>
             <input
@@ -27,7 +28,7 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
             />
           </Form.Field>
         </Grid.Column>
-        <Grid.Column>
+        <Grid.Column width={4}>
           <Form.Field>
             <label>Measurement</label>
             <input
@@ -42,7 +43,7 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
             />
           </Form.Field>
         </Grid.Column>
-        <Grid.Column>
+        <Grid.Column width={6}>
           <Form.Field>
             <label>Name</label>
             <input
@@ -61,7 +62,7 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
     for (let i = 1; i < currentIngredients.length; i++) {
       ingredientInputs.push(
         <Grid.Row columns="equal" key={"steps" + i}>
-          <Grid.Column>
+          <Grid.Column width={4}>
             <Form.Field>
               <input
                 type="number"
@@ -72,7 +73,7 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
               />
             </Form.Field>
           </Grid.Column>
-          <Grid.Column>
+          <Grid.Column width={4}>
             <Form.Field>
               <input
                 defaultValue={currentIngredients[i].measurement}
@@ -82,7 +83,7 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
               />
             </Form.Field>
           </Grid.Column>
-          <Grid.Column>
+          <Grid.Column width={6}>
             <Form.Field>
               <input
                 defaultValue={currentIngredients[i].name}
@@ -91,6 +92,15 @@ function Ingredients({ currentIngredients, setCurrentIngredients }) {
                 }
               />
             </Form.Field>
+          </Grid.Column>
+          <Grid.Column width={2} textAlign="center" verticalAlign="middle">
+            <Icon 
+              name="minus circle"
+              size='big'
+              color='grey'
+              style={{ cursor: 'pointer' }}
+              onClick={() => onIngredientDelete(i)}
+            />
           </Grid.Column>
         </Grid.Row>
       );
