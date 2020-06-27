@@ -184,11 +184,11 @@ function RecipeCard({ recipe, refreshRecipesAfterDelete, onEditRecipe }) {
       </Card.Content>
       <Card.Content extra textAlign="right">
         {!recipeLoading &&
-          (<><a onClick={() => onEditRecipe(recipe)}>
+          (<><a onClick={() => onEditRecipe(recipe)} href="# ">
             <Icon name="pencil" />
             {`Edit\t`}
           </a>
-            <a onClick={() => onDeleteRecipe(recipe)}>
+            <a onClick={() => onDeleteRecipe(recipe)} href="# ">
               <Icon name="trash" />
             Delete
           </a></>)

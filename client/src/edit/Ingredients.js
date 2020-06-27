@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Form, Grid, Button, Icon } from "semantic-ui-react";
 
 function Ingredients({ currentIngredients, setCurrentIngredients, onIngredientDelete }) {
