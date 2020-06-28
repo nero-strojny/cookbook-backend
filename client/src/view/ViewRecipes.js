@@ -27,11 +27,7 @@ function ViewRecipes({ onCreateRecipe, onSuccessfulDelete, onEditRecipe }) {
     setShouldRefresh(true);
     onSuccessfulDelete(recipe.recipename);
   }
-
-  function onRefreshRecipes() {
-
-  }
-
+  
   return (
     <Grid padded>
       <Grid.Row columns="equal">
