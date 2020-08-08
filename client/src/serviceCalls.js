@@ -1,6 +1,6 @@
 import axios from "axios";
 
-let endpoint = "http://localhost:8080";
+let endpoint = "http://ec2-54-145-81-149.compute-1.amazonaws.com:8080";
 
 export const createRecipe = async (recipe) => {
   await axios.post(endpoint + "/api/recipe", recipe, {
@@ -11,7 +11,7 @@ export const createRecipe = async (recipe) => {
 };
 
 export const getRecipes = async () =>{
-  const response = await axios.get("http://localhost:8080/api/recipes");
+  const response = await axios.get("http://ec2-54-145-81-149.compute-1.amazonaws.com:8080/api/recipes");
   return response.data
 };
 
