@@ -29,6 +29,16 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(payload)
 }
 
+//GetRecipeByName looks up a recipe by its exact name
+func GetRecipeByName(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	params := mux.Vars(r)
+	payload := controller.Search(params["name"])
+	json.NewEncoder(w).Encode(payload)
+}
+
 // CreateRecipe controller POST request
 func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
