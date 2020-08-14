@@ -105,6 +105,19 @@ func Get(recipeID string) models.Recipe {
 	return result
 }
 
+//Search for a recipe by exact name
+func Search(name string) models.Recipe {
+	result := models.Recipe{}
+	filter := bson.M{"recipeName": name}
+	err := collection.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return result
+
+
+}
+
 //Delete a recipe by its ID.
 func Delete(recipeID string) {
 	id, _ := primitive.ObjectIDFromHex(recipeID)

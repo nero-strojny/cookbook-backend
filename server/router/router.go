@@ -16,6 +16,8 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/recipe/{id}", middleware.UpdateRecipe).Methods("PUT")
 	router.HandleFunc("/api/recipe/{id}", middleware.SingleRecipeOptions).Methods("OPTIONS")
 
+	router.HandleFunc("/api/recipe/search", middleware.GetRecipeByName).Methods("POST", "OPTIONS")
+
 	router.HandleFunc("/api/recipe", middleware.CreateRecipe).Methods("POST")
 	router.HandleFunc("/api/recipe", middleware.CreateRecipeOptions).Methods("OPTIONS")
 
