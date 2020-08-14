@@ -10,7 +10,6 @@
 
 ## Development:
 - learned from [ToDo App Tutorial](https://levelup.gitconnected.com/build-a-todo-app-in-golang-mongodb-and-react-e1357b4690a6)
-- current [wiremocks for UI](https://wireframe.cc/gBx1v8)
 
 ## Deployment:
 - ssh into the ec2 instance `ssh -i "<pem file here>" ec2-user@ec2-54-145-81-149.compute-1.amazonaws.com`
