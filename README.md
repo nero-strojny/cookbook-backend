@@ -1,12 +1,12 @@
 # Cookbook
 
-## Requirements:
+## Running Locally:
 
-### GO
-
-`go get go.mongodb.org/mongo-driver/mongo`
-
-`go get -u github.com/gorilla/mux`
+- install go
+- run `go get go.mongodb.org/mongo-driver/mongo`
+- run `go get -u github.com/gorilla/mux`
+- add config file with the proper access to the mongodb
+- run `go run main.go`
 
 ## Development:
 - learned from [ToDo App Tutorial](https://levelup.gitconnected.com/build-a-todo-app-in-golang-mongodb-and-react-e1357b4690a6)
