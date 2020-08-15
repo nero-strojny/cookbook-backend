@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -67,100 +68,112 @@ func init() {
 }
 
 //GetAll - gets all recipes
-func GetAll() []primitive.M {
+func GetAll() ([]primitive.M, error) {
+	var emptyResults []primitive.M
 	cur, err := collection.Find(context.Background(), bson.D{{}})
 	if err != nil {
-		log.Fatal(err)
+		return emptyResults, err
 	}
 
+	// individually decode mongo results
 	var results []primitive.M
 	for cur.Next(context.Background()) {
 		var result bson.M
 		e := cur.Decode(&result)
 		if e != nil {
-			log.Fatal(e)
+			return emptyResults, e
 		}
-		// fmt.Println("cur..>", cur, "result", reflect.TypeOf(result), reflect.TypeOf(result["_id"]))
 		results = append(results, result)
 
 	}
 
 	if err := cur.Err(); err != nil {
-		log.Fatal(err)
+		return emptyResults, err
 	}
 
 	cur.Close(context.Background())
-	return results
+	return results, nil
 }
 
 //Get - gets recipes by its ID
-func Get(recipeID string) models.Recipe {
+func Get(recipeID string) (models.Recipe, error) {
 	result := models.Recipe{}
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
 	err := collection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
-		log.Fatal(err)
+		return result, err
 	}
-	return result
+	return result, nil
 }
 
 //Search for a recipe by exact name
-func Search(name string) models.Recipe {
+func Search(name string) (models.Recipe, error) {
 	result := models.Recipe{}
-	filter := bson.M{"recipeName": name}
+	filter := bson.M{"recipename": name}
+	log.Print(name)
 	err := collection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
-		log.Fatal(err)
+		return result, err
 	}
-	return result
-
+	return result, nil
 
 }
 
 //Delete a recipe by its ID.
-func Delete(recipeID string) {
+func Delete(recipeID string) error {
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
-	_, err := collection.DeleteOne(context.Background(), filter)
+	result, err := collection.DeleteOne(context.Background(), filter)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	if result.DeletedCount != 1 {
+		return errors.New("Nothing was deleted")
+	}
+	return nil
 }
 
 //Create a new recipe
-func Create(recipe models.Recipe) (invalidData []string, errorCode int) {
+func Create(recipe models.Recipe) (models.Recipe, []string, error) {
 	currentTime := time.Now()
 	recipe.CreatedDate = currentTime.Format("2006.01.02 15:04:05")
 	recipe.LastUpdatedDate = currentTime.Format("2006.01.02 15:04:05")
-	valid, invalidFields := validateRecipe(recipe)
+	valid, invalidFields := isValidRecipe(recipe)
 	if valid == false {
-		return invalidFields, 400
+		return models.Recipe{}, invalidFields, errors.New("Invalid fields")
 	}
-	_, err := collection.InsertOne(context.Background(), recipe)
+	result, err := collection.InsertOne(context.Background(), recipe)
 
 	if err != nil {
-		log.Fatal(err)
+		return models.Recipe{}, invalidFields, err
 	}
-	return invalidFields, 204
+
+	recipe.RecipeID = result.InsertedID.(primitive.ObjectID)
+	return recipe, invalidFields, nil
 }
 
 //Update an existing recipe by its id
-func Update(recipeID string, updatedRecipe models.Recipe) {
+func Update(recipeID string, updatedRecipe models.Recipe) (models.Recipe, error) {
 	currentTime := time.Now()
 	updatedRecipe.LastUpdatedDate = currentTime.Format("2006.01.02 15:04:05")
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
 	//Could do this as an update but that requires checking what fields are different between recipes
 	//Could be a hassle with a long list of ingredients or measurements. Easier to just replace the entire recipe with the new update
-	_, err := collection.ReplaceOne(context.Background(), filter, updatedRecipe)
+	opts := options.Replace().SetUpsert(true)
+	result, err := collection.ReplaceOne(context.Background(), filter, updatedRecipe, opts)
 
 	if err != nil {
-		log.Fatal(err)
+		return models.Recipe{}, err
 	}
+	if result.UpsertedID != nil {
+		updatedRecipe.RecipeID = result.UpsertedID.(primitive.ObjectID)
+	}
+	return updatedRecipe, nil
 }
 
-func validateRecipe(recipe models.Recipe) (valid bool, invalidFields []string) {
+func isValidRecipe(recipe models.Recipe) (valid bool, invalidFields []string) {
 
 	if recipe.RecipeName == "" {
 		invalidFields = append(invalidFields, "recipeName")
@@ -168,7 +181,7 @@ func validateRecipe(recipe models.Recipe) (valid bool, invalidFields []string) {
 
 	if len(invalidFields) > 0 {
 		return false, invalidFields
-	} 
-		return true, invalidFields
-	
+	}
+	return true, invalidFields
+
 }
