@@ -31,17 +31,17 @@ func SetRecipeClient(c *mongo.Client) {
 }
 
 //GetAllRecipes - gets all recipes
-func GetAllRecipes() ([]primitive.M, error) {
-	var emptyResults []primitive.M
+func GetAllRecipes() ([]models.Recipe, error) {
+	var emptyResults []models.Recipe
 	cur, err := recipeCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
 		return emptyResults, err
 	}
 
 	// individually decode mongo results
-	var results []primitive.M
+	var results []models.Recipe
 	for cur.Next(context.Background()) {
-		var result bson.M
+		result := models.Recipe{}
 		e := cur.Decode(&result)
 		if e != nil {
 			return emptyResults, e
