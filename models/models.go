@@ -10,12 +10,12 @@ type Recipe struct {
 	LastUpdatedDate string             `json:"lastUpdatedDate,omitempty"`
 	Ingredients     []ingredient       `json:"ingredients,omitempty"`
 	Author          string             `json:"author,omitempty"`
-	PrepTime        int                `json:"prepTime,omitempty"`
-	CookTime        int                `json:"cookTime,omitempty"`
+	PrepTime        int                `json:"prepTime"`
+	CookTime        int                `json:"cookTime"`
 	Steps           []step             `json:"steps,omitempty"`
-	Rating          int                `json:"rating,omitempty"`
-	Servings        int                `json:"servings,omitempty"`
-	Calories        int                `json:"calories,omitempty"`
+	Rating          int                `json:"rating"`
+	Servings        int                `json:"servings"`
+	Calories        int                `json:"calories"`
 	UserID          string             `json:"userId,omitempty"`
 	Private         bool               `json:"private,omitempty"`
 }
