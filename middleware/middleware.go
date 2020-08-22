@@ -35,6 +35,7 @@ func init() {
 
 	controller.SetRecipeClient(client)
 	controller.SetCalorieClient(client)
+	controller.SetUserClient(client)
 }
 
 // GetAllRecipes controller GET request
@@ -75,7 +76,6 @@ func GetRecipeByName(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&recipe)
 	payload, err := controller.SearchRecipe(recipe.RecipeName)
 	if err != nil {
-		log.Print(err)
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		w.WriteHeader(http.StatusOK)
@@ -255,4 +255,80 @@ func CreateCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("")
+}
+
+//GenerateUserToken refreshes a token
+func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	var authData models.AuthData
+	_ = json.NewDecoder(r.Body).Decode(&authData)
+	token, err := controller.GenerateUserToken(authData)
+	if err != nil && token == "failed authentication, unknown user or password" {
+		w.WriteHeader(http.StatusNotFound)
+	} else if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		json.NewEncoder(w).Encode(token)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+//CreateUser creates a new user in the database
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	var user models.User
+	_ = json.NewDecoder(r.Body).Decode(&user)
+	payload, err := controller.CreateUser(user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(payload.UserName)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// DeleteUser controller DELETE request
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	params := mux.Vars(r)
+	err := controller.DeleteUser(params["userId"])
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// GetUsers controller GET request
+func GetUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	payload, err := controller.GetUsers()
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(payload)
+	}
+}
+
+//GenerateUserTokenOptions handles preflight CORS for creating a calorie log
+func GenerateUserTokenOptions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.WriteHeader(http.StatusOK)
 }

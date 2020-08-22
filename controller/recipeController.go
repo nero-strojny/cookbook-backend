@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"server/models"
@@ -22,7 +21,7 @@ const recipeCollectionName = "cookbookCollection"
 var recipeCollection *mongo.Collection
 var recipeClient *mongo.Client
 
-//SetRecipeClient
+//SetRecipeClient sets the client to connect to the recipe database
 func SetRecipeClient(c *mongo.Client) {
 	recipeClient = c
 	recipeCollection = recipeClient.Database(recipeDBName).Collection(recipeCollectionName)
@@ -74,7 +73,6 @@ func GetRecipe(recipeID string) (models.Recipe, error) {
 func SearchRecipe(name string) (models.Recipe, error) {
 	result := models.Recipe{}
 	filter := bson.M{"recipename": name}
-	log.Print(name)
 	err := recipeCollection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
 		return result, err

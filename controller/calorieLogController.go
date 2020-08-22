@@ -21,7 +21,7 @@ const calorieLogCollectionName = "calorieLogCollection"
 var collection *mongo.Collection
 var calorieClient *mongo.Client
 
-//SetCalorieClient
+//SetCalorieClient sets the client to connect to the calorie log database
 func SetCalorieClient(c *mongo.Client) {
 	calorieClient = c
 	collection = calorieClient.Database(calorieLogDBName).Collection(calorieLogCollectionName)
