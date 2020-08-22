@@ -50,7 +50,7 @@ type UserData struct {
 	MaintenanceCalories int                `json:"maintenanceCalories,omitEmpty"`
 }
 
-// User is the authentication information for a user
+// User is the data representation of a user
 type User struct {
 	UserID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserName     string             `json:"userName,omitempty"`
@@ -60,8 +60,15 @@ type User struct {
 	UserType     string             `json:"userType,omitempty"`
 }
 
+// RequestedUser is what is needed to create a user
+type RequestedUser struct {
+	UserName string `json:"userName,omitempty"`
+	Password string `json:"password,omitEmpty"`
+	UserType string `json:"userType,omitempty"`
+}
+
 // AuthData is the authentication information for a user
 type AuthData struct {
-	UserName     string `json:"userName"`
-	PasswordHash string `json:"passwordHash"`
+	UserName string `json:"userName"`
+	Password string `json:"password"`
 }

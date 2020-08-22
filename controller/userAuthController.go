@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const userDBName = "calorieLogTable"
@@ -42,18 +43,30 @@ func SetUserClient(c *mongo.Client) {
 }
 
 //CreateUser creates a new user
-func CreateUser(user models.User) (models.User, error) {
-	result, err := userCollection.InsertOne(context.Background(), user)
+func CreateUser(requestedUser models.RequestedUser) (models.User, error) {
+	// ensure there isn't another user with the same username
+	result := models.User{}
+	getFilter := bson.M{"username": requestedUser.UserName}
+	getErr := userCollection.FindOne(context.Background(), getFilter).Decode(&result)
+	if getErr != nil {
+		insertedUser := models.User{}
+		insertedUser.UserName = requestedUser.UserName
+		insertedUser.UserType = requestedUser.UserType
+		bytes, err := bcrypt.GenerateFromPassword([]byte(requestedUser.Password), 14)
+		insertedUser.PasswordHash = string(bytes)
+		result, err := userCollection.InsertOne(context.Background(), insertedUser)
 
-	if err != nil {
-		return models.User{}, err
+		if err != nil {
+			return models.User{}, err
+		}
+
+		insertedUser.UserID = result.InsertedID.(primitive.ObjectID)
+		return insertedUser, nil
 	}
-
-	user.UserID = result.InsertedID.(primitive.ObjectID)
-	return user, nil
+	return models.User{}, errors.New("Username already taken")
 }
 
-//GetUsers - gets users by name
+//GetUsers - gets users
 func GetUsers() ([]models.User, error) {
 	var emptyResults []models.User
 	cur, err := userCollection.Find(context.Background(), bson.D{{}})
@@ -95,26 +108,56 @@ func DeleteUser(userID string) error {
 	return nil
 }
 
-//GenerateUserToken gernates a new token
+//GenerateUserToken generates a new token
 func GenerateUserToken(authData models.AuthData) (string, error) {
 	// token expires in an hour
 	expiryTime := time.Now().AddDate(0, 0, 1)
 	result := models.User{}
 	getFilter := bson.M{"username": authData.UserName}
 	getErr := userCollection.FindOne(context.Background(), getFilter).Decode(&result)
-	if getErr != nil || result.PasswordHash != authData.PasswordHash {
+	if getErr != nil {
 		return "failed authentication, unknown user or password", getErr
 	}
 
-	result.AccessToken = StringWithCharset(32)
-	result.ExpiryDate = expiryTime.Format("2006.01.02 15:04:05")
+	hashErr := bcrypt.CompareHashAndPassword([]byte(result.PasswordHash), []byte(authData.Password))
+	if hashErr != nil {
+		result.AccessToken = ""
+	} else {
+		result.AccessToken = StringWithCharset(32)
+		result.ExpiryDate = expiryTime.Format("2006.01.02 15:04:05")
+	}
 
 	updateFilter := bson.M{"_id": result.UserID}
 	updateResult, updateErr := userCollection.ReplaceOne(context.Background(), updateFilter, result)
+
+	if hashErr != nil {
+		return "failed authentication, unknown user or password", hashErr
+	}
 
 	if updateErr != nil || updateResult.ModifiedCount != 1 {
 		return "failed authentication", updateErr
 	}
 
 	return result.AccessToken, nil
+}
+
+//ValidateUser
+func ValidateUser(accessToken string, restrictAdmin bool) error {
+	if len(accessToken) == 0 {
+		return errors.New("No token in request")
+	}
+	currentTime := time.Now().Format("2006.01.02 15:04:05")
+	result := models.User{}
+	filter := bson.M{"accesstoken": accessToken}
+	err := userCollection.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil || len(result.ExpiryDate) == 0 || result.ExpiryDate < currentTime {
+		return err
+	} else if result.ExpiryDate < currentTime {
+		return errors.New("Expired Token")
+	} else if restrictAdmin && result.UserType != "admin" {
+		return errors.New("User does not have admin permissions")
+	} else {
+		return nil
+	}
+
 }

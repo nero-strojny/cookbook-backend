@@ -5,6 +5,7 @@
 - install go
 - run `go get go.mongodb.org/mongo-driver/mongo`
 - run `go get -u github.com/gorilla/mux`
+- run `go get golang.org/x/crypto/bcrypt`
 - add config file with the proper access to the mongodb
 - run `go run main.go`
 
