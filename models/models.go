@@ -72,3 +72,13 @@ type AuthData struct {
 	UserName string `json:"userName"`
 	Password string `json:"password"`
 }
+
+// AccessToken is the authentication information for a user
+type AccessToken struct {
+	AccessToken string `json:"accessToken,omitEmpty"`
+}
+
+// UpdatedPassword contains the updated password information
+type UpdatedPassword struct {
+	Password string `json:"password,omitEmpty"`
+}

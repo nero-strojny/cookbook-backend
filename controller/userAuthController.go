@@ -116,7 +116,7 @@ func GenerateUserToken(authData models.AuthData) (string, error) {
 	getFilter := bson.M{"username": authData.UserName}
 	getErr := userCollection.FindOne(context.Background(), getFilter).Decode(&result)
 	if getErr != nil {
-		return "failed authentication, unknown user or password", getErr
+		return "", errors.New("failed authentication, unknown user or password")
 	}
 
 	hashErr := bcrypt.CompareHashAndPassword([]byte(result.PasswordHash), []byte(authData.Password))
@@ -131,11 +131,11 @@ func GenerateUserToken(authData models.AuthData) (string, error) {
 	updateResult, updateErr := userCollection.ReplaceOne(context.Background(), updateFilter, result)
 
 	if hashErr != nil {
-		return "failed authentication, unknown user or password", hashErr
+		return "", errors.New("failed authentication, unknown user or password")
 	}
 
 	if updateErr != nil || updateResult.ModifiedCount != 1 {
-		return "failed authentication", updateErr
+		return "", errors.New("failed authentication")
 	}
 
 	return result.AccessToken, nil
