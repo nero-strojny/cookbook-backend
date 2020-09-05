@@ -3,36 +3,19 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"server/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-const recipeDBName = "recipesTable"
-const recipeCollectionName = "cookbookCollection"
-
-// recipeCollection object/instance
-var recipeCollection *mongo.Collection
-var recipeClient *mongo.Client
-
-//SetRecipeClient sets the client to connect to the recipe database
-func SetRecipeClient(c *mongo.Client) {
-	recipeClient = c
-	recipeCollection = recipeClient.Database(recipeDBName).Collection(recipeCollectionName)
-
-	fmt.Println("Collection instance created!")
-}
 
 //GetAllRecipes - gets all recipes
 func GetAllRecipes() ([]models.Recipe, error) {
 	var emptyResults []models.Recipe
-	cur, err := recipeCollection.Find(context.Background(), bson.D{{}})
+	cur, err := RecipeCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
 		return emptyResults, err
 	}
@@ -62,7 +45,7 @@ func GetRecipe(recipeID string) (models.Recipe, error) {
 	result := models.Recipe{}
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
-	err := recipeCollection.FindOne(context.Background(), filter).Decode(&result)
+	err := RecipeCollection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
 		return result, err
 	}
@@ -73,7 +56,7 @@ func GetRecipe(recipeID string) (models.Recipe, error) {
 func SearchRecipe(name string) (models.Recipe, error) {
 	result := models.Recipe{}
 	filter := bson.M{"recipename": name}
-	err := recipeCollection.FindOne(context.Background(), filter).Decode(&result)
+	err := RecipeCollection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
 		return result, err
 	}
@@ -85,7 +68,7 @@ func SearchRecipe(name string) (models.Recipe, error) {
 func DeleteRecipe(recipeID string) error {
 	id, _ := primitive.ObjectIDFromHex(recipeID)
 	filter := bson.M{"_id": id}
-	result, err := recipeCollection.DeleteOne(context.Background(), filter)
+	result, err := RecipeCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err
 	}
@@ -104,7 +87,7 @@ func CreateRecipe(recipe models.Recipe) (models.Recipe, []string, error) {
 	if valid == false {
 		return models.Recipe{}, invalidFields, errors.New("Invalid fields")
 	}
-	result, err := recipeCollection.InsertOne(context.Background(), recipe)
+	result, err := RecipeCollection.InsertOne(context.Background(), recipe)
 
 	if err != nil {
 		return models.Recipe{}, invalidFields, err
@@ -123,7 +106,7 @@ func UpdateRecipe(recipeID string, updatedRecipe models.Recipe) (models.Recipe, 
 	//Could do this as an update but that requires checking what fields are different between recipes
 	//Could be a hassle with a long list of ingredients or measurements. Easier to just replace the entire recipe with the new update
 	opts := options.Replace().SetUpsert(true)
-	result, err := recipeCollection.ReplaceOne(context.Background(), filter, updatedRecipe, opts)
+	result, err := RecipeCollection.ReplaceOne(context.Background(), filter, updatedRecipe, opts)
 
 	if err != nil {
 		return models.Recipe{}, err

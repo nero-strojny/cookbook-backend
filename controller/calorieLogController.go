@@ -3,35 +3,19 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"server/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-const calorieLogDBName = "calorieLogTable"
-const calorieLogCollectionName = "calorieLogCollection"
-
-// collection object/instance
-var collection *mongo.Collection
-var calorieClient *mongo.Client
-
-//SetCalorieClient sets the client to connect to the calorie log database
-func SetCalorieClient(c *mongo.Client) {
-	calorieClient = c
-	collection = calorieClient.Database(calorieLogDBName).Collection(calorieLogCollectionName)
-	fmt.Println("Collection instance created!")
-}
 
 //GetAllCalorieLogs - gets all CalorieLog
 func GetAllCalorieLogs() ([]primitive.M, error) {
 	var emptyResults []primitive.M
-	cur, err := collection.Find(context.Background(), bson.D{{}})
+	cur, err := CalorieLogCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
 		return emptyResults, err
 	}
@@ -61,7 +45,7 @@ func GetCalorieLog(calorieLogID string) (models.Recipe, error) {
 	result := models.Recipe{}
 	id, _ := primitive.ObjectIDFromHex(calorieLogID)
 	filter := bson.M{"_id": id}
-	err := collection.FindOne(context.Background(), filter).Decode(&result)
+	err := CalorieLogCollection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
 		return result, err
 	}
@@ -72,7 +56,7 @@ func GetCalorieLog(calorieLogID string) (models.Recipe, error) {
 func DeleteCalorieLog(calorieLogID string) error {
 	id, _ := primitive.ObjectIDFromHex(calorieLogID)
 	filter := bson.M{"_id": id}
-	result, err := collection.DeleteOne(context.Background(), filter)
+	result, err := CalorieLogCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err
 	}
@@ -86,7 +70,7 @@ func DeleteCalorieLog(calorieLogID string) error {
 func CreateCalorieLog(calorieLog models.CalorieLog) (models.CalorieLog, error) {
 	currentTime := time.Now()
 	calorieLog.EnteredDate = currentTime.Format("2006.01.02 15:04:05")
-	result, err := collection.InsertOne(context.Background(), calorieLog)
+	result, err := CalorieLogCollection.InsertOne(context.Background(), calorieLog)
 
 	if err != nil {
 		return models.CalorieLog{}, err
@@ -102,7 +86,7 @@ func UpdateCalorieLog(calorieLogID string, updatedCalorieLog models.CalorieLog) 
 	//Could do this as an update but that requires checking what fields are different between calorie log s
 	//Could be a hassle with a long list of ingredients or measurements. Easier to just replace the entire calorie log  with the new update
 	opts := options.Replace().SetUpsert(true)
-	result, err := collection.ReplaceOne(context.Background(), filter, updatedCalorieLog, opts)
+	result, err := CalorieLogCollection.ReplaceOne(context.Background(), filter, updatedCalorieLog, opts)
 
 	if err != nil {
 		return models.CalorieLog{}, err

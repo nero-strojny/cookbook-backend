@@ -1,43 +1,15 @@
 package middleware
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
 	"server/controller"
 	"server/models"
-	"server/util"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-func init() {
-	dbConnectionString := util.OpenFile()
-	clientOptions := options.Client().ApplyURI(dbConnectionString)
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Connected to MongoDB!")
-
-	controller.SetRecipeClient(client)
-	controller.SetCalorieClient(client)
-	controller.SetUserClient(client)
-}
 
 func writeCommonHeader(w http.ResponseWriter) http.ResponseWriter {
 	acceptedHeaders := "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, X-CSRF-Token"

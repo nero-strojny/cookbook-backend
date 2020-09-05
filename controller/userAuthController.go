@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -11,16 +10,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
-
-const userDBName = "calorieLogTable"
-const userCollectionName = "calorieLogCollection"
-
-// collection object/instance
-var userCollection *mongo.Collection
-var userClient *mongo.Client
 
 //StringWithCharset generates a random string
 func StringWithCharset(length int) string {
@@ -35,26 +26,19 @@ func StringWithCharset(length int) string {
 	return string(b)
 }
 
-//SetUserClient sets the client to connect to user database
-func SetUserClient(c *mongo.Client) {
-	userClient = c
-	userCollection = userClient.Database(userDBName).Collection(userCollectionName)
-	fmt.Println("Collection instance created!")
-}
-
 //CreateUser creates a new user
 func CreateUser(requestedUser models.RequestedUser) (models.User, error) {
 	// ensure there isn't another user with the same username
 	result := models.User{}
 	getFilter := bson.M{"username": requestedUser.UserName}
-	getErr := userCollection.FindOne(context.Background(), getFilter).Decode(&result)
+	getErr := UserCollection.FindOne(context.Background(), getFilter).Decode(&result)
 	if getErr != nil {
 		insertedUser := models.User{}
 		insertedUser.UserName = requestedUser.UserName
 		insertedUser.UserType = requestedUser.UserType
 		bytes, err := bcrypt.GenerateFromPassword([]byte(requestedUser.Password), 14)
 		insertedUser.PasswordHash = string(bytes)
-		result, err := userCollection.InsertOne(context.Background(), insertedUser)
+		result, err := UserCollection.InsertOne(context.Background(), insertedUser)
 
 		if err != nil {
 			return models.User{}, err
@@ -69,7 +53,7 @@ func CreateUser(requestedUser models.RequestedUser) (models.User, error) {
 //GetUsers - gets users
 func GetUsers() ([]models.User, error) {
 	var emptyResults []models.User
-	cur, err := userCollection.Find(context.Background(), bson.D{{}})
+	cur, err := UserCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
 		return emptyResults, err
 	}
@@ -98,7 +82,7 @@ func GetUsers() ([]models.User, error) {
 func DeleteUser(userID string) error {
 	id, _ := primitive.ObjectIDFromHex(userID)
 	filter := bson.M{"_id": id}
-	result, err := userCollection.DeleteOne(context.Background(), filter)
+	result, err := UserCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err
 	}
@@ -114,7 +98,7 @@ func GenerateUserToken(authData models.AuthData) (string, error) {
 	expiryTime := time.Now().AddDate(0, 0, 1)
 	result := models.User{}
 	getFilter := bson.M{"username": authData.UserName}
-	getErr := userCollection.FindOne(context.Background(), getFilter).Decode(&result)
+	getErr := UserCollection.FindOne(context.Background(), getFilter).Decode(&result)
 	if getErr != nil {
 		return "", errors.New("failed authentication, unknown user or password")
 	}
@@ -128,7 +112,7 @@ func GenerateUserToken(authData models.AuthData) (string, error) {
 	}
 
 	updateFilter := bson.M{"_id": result.UserID}
-	updateResult, updateErr := userCollection.ReplaceOne(context.Background(), updateFilter, result)
+	updateResult, updateErr := UserCollection.ReplaceOne(context.Background(), updateFilter, result)
 
 	if hashErr != nil {
 		return "", errors.New("failed authentication, unknown user or password")
@@ -149,7 +133,7 @@ func ValidateUser(accessToken string, restrictAdmin bool) error {
 	currentTime := time.Now().Format("2006.01.02 15:04:05")
 	result := models.User{}
 	filter := bson.M{"accesstoken": accessToken}
-	err := userCollection.FindOne(context.Background(), filter).Decode(&result)
+	err := UserCollection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil || len(result.ExpiryDate) == 0 || result.ExpiryDate < currentTime {
 		return err
 	} else if result.ExpiryDate < currentTime {
