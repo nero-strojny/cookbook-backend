@@ -13,7 +13,7 @@
       "env": {},
       "args": [
         "-DB_STRING", 
-        "mongodb+srv://admin:waG2UNA09QQnuMNu@cookbook-tu2hn.mongodb.net/recipesTable?retryWrites=true&w=majority"
+        "<DB STRING HERE>"
       ]
     }
   ]
