@@ -7,11 +7,11 @@
 - run `go get -u github.com/gorilla/mux`
 - run `go get golang.org/x/crypto/bcrypt`
 - add config file with the proper access to the mongodb
-- run `go run main.go`
+- run `go run main.go -DB_STRING "<DB_STRING>"`
 
 ## Testing
 - run `go get github.com/stretchr/testify/assert`
-- run `go test -v ./test`
+- run `go test -v ./test -DB_STRING "<DB_STRING>" -ENV "dev"`
 
 ## Development:
 - learned from [ToDo App Tutorial](https://levelup.gitconnected.com/build-a-todo-app-in-golang-mongodb-and-react-e1357b4690a6)

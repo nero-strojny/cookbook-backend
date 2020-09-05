@@ -61,38 +61,38 @@ func TestCreate(t *testing.T) {
 	deleteRecipe("1")
 }
 
-// func TestCreateWithInvalidFields(t *testing.T) {
-// 	id, _ := primitive.ObjectIDFromHex("2")
-// 	defaultRecipe.RecipeID = id
-// 	response := createRecipe(defaultRecipe)
-// 	assert.Equal(t, 201, response.Code, "OK response is expected")
-// 	deleteRecipe("1")
-// }
+func TestCreateWithInvalidFields(t *testing.T) {
+	id, _ := primitive.ObjectIDFromHex("2")
+	defaultRecipe.RecipeID = id
+	response := createRecipe(defaultRecipe)
+	assert.Equal(t, 201, response.Code, "OK response is expected")
+	deleteRecipe("1")
+}
 
-// func TestGet(t *testing.T) {
+func TestGet(t *testing.T) {
 
-// }
+}
 
-// func TestGetWithUnknownRecipe(t *testing.T) {
+func TestGetWithUnknownRecipe(t *testing.T) {
 
-// }
+}
 
-// func TestGetAll(t *testing.T) {
+func TestGetAll(t *testing.T) {
 
-// }
+}
 
-// func TestSearch(t *testing.T) {
+func TestSearch(t *testing.T) {
 
-// }
+}
 
-// func TestUpdate(t *testing.T) {
+func TestUpdate(t *testing.T) {
 
-// }
+}
 
-// func TestDelete(t *testing.T) {
+func TestDelete(t *testing.T) {
 
-// }
+}
 
-// func TestDeleteWithUnknownRecipe(t *testing.T) {
+func TestDeleteWithUnknownRecipe(t *testing.T) {
 
-// }
+}
