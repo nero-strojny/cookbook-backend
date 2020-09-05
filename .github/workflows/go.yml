@@ -36,4 +36,4 @@ jobs:
     - name: Test
       env: 
         DB_STRING: ${{ secrets.DB_STRING }}
-      run: go test -v ./test -DB_STRING %DB_STRING -ENV 'dev'
+      run: go test -v ./test -DB_STRING "$env:DB_STRING" -ENV 'dev'
