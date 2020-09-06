@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"server/util"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -24,8 +25,15 @@ var CalorieLogCollection *mongo.Collection
 
 // SetClients connect to mongo db, set up the collections
 func SetClients(dbString string, env string) {
-	log.Print(dbString, env)
-	clientOptions := options.Client().ApplyURI(dbString)
+	var connectionString string
+
+	// If the dBString is empty, then we need to fall back on a file if one is present
+	if dbString == "" {
+		connectionString = util.OpenFile("config.json")
+	} else {
+		connectionString = dbString
+	}
+	clientOptions := options.Client().ApplyURI(connectionString)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {

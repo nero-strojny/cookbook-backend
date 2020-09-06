@@ -38,8 +38,8 @@ type CalorieLog struct {
 	CalorieLogID primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	EnteredDate  string             `json:"enteredDate,omitempty"`
 	Calories     int                `json:"calories,omitempty"`
-	Description  string             `json:"description,omitEmpty"`
-	UserID       string             `json:"userId,omitEmpty"`
+	Description  string             `json:"description,omitempty"`
+	UserID       string             `json:"userId,omitempty"`
 }
 
 // UserData is data pertaining to the user's physical characteristics

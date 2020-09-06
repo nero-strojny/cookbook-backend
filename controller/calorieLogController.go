@@ -13,8 +13,8 @@ import (
 )
 
 //GetCalorieLog - gets calorie log s by its ID
-func GetCalorieLog(calorieLogID string) (models.Recipe, error) {
-	result := models.Recipe{}
+func GetCalorieLog(calorieLogID string) (models.CalorieLog, error) {
+	result := models.CalorieLog{}
 	id, _ := primitive.ObjectIDFromHex(calorieLogID)
 	filter := bson.M{"_id": id}
 	err := CalorieLogCollection.FindOne(context.Background(), filter).Decode(&result)

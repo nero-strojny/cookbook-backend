@@ -7,8 +7,9 @@ import (
 	"os"
 )
 
-func OpenFile() string {
-	jsonFile, err := os.Open("config.json")
+// OpenFile find the connection db string
+func OpenFile(filePath string) string {
+	jsonFile, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println(err)
 		return "Could not open file"
