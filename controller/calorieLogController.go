@@ -12,34 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-//GetAllCalorieLogs - gets all CalorieLog
-func GetAllCalorieLogs() ([]primitive.M, error) {
-	var emptyResults []primitive.M
-	cur, err := CalorieLogCollection.Find(context.Background(), bson.D{{}})
-	if err != nil {
-		return emptyResults, err
-	}
-
-	// individually decode mongo results
-	var results []primitive.M
-	for cur.Next(context.Background()) {
-		var result bson.M
-		e := cur.Decode(&result)
-		if e != nil {
-			return emptyResults, e
-		}
-		results = append(results, result)
-
-	}
-
-	if err := cur.Err(); err != nil {
-		return emptyResults, err
-	}
-
-	cur.Close(context.Background())
-	return results, nil
-}
-
 //GetCalorieLog - gets calorie log s by its ID
 func GetCalorieLog(calorieLogID string) (models.Recipe, error) {
 	result := models.Recipe{}

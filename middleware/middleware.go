@@ -138,19 +138,6 @@ func CreateRecipeOptions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(response).Encode("")
 }
 
-// GetAllCalorieLogs controller GET request
-func GetAllCalorieLogs(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
-	response.Header().Set("Access-Control-Allow-Methods", "GET")
-	payload, err := controller.GetAllCalorieLogs()
-	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
-	} else {
-		response.WriteHeader(http.StatusOK)
-		json.NewEncoder(response).Encode(payload)
-	}
-}
-
 // GetCalorieLog by ID controller GET request
 func GetCalorieLog(w http.ResponseWriter, r *http.Request) {
 	response := writeCommonHeader(w)

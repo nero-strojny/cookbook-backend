@@ -22,7 +22,6 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/recipe", middleware.CreateRecipe).Methods("POST")
 	router.HandleFunc("/api/recipe", middleware.CreateRecipeOptions).Methods("OPTIONS")
 
-	router.HandleFunc("/api/calorieLogs", middleware.GetAllCalorieLogs).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/calorieLog/{id}", middleware.GetCalorieLog).Methods("GET")
 	router.HandleFunc("/api/calorieLog/{id}", middleware.DeleteCalorieLog).Methods("DELETE")
 	router.HandleFunc("/api/calorieLog/{id}", middleware.UpdateCalorieLog).Methods("PUT")
