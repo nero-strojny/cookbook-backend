@@ -79,9 +79,8 @@ func GetUsers() ([]models.User, error) {
 }
 
 //DeleteUser - deletes a User by its ID.
-func DeleteUser(userID string) error {
-	id, _ := primitive.ObjectIDFromHex(userID)
-	filter := bson.M{"_id": id}
+func DeleteUser(userName string) error {
+	filter := bson.M{"username": userName}
 	result, err := UserCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err

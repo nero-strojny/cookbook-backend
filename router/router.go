@@ -31,7 +31,7 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/calorieLog", middleware.CreateCalorieLogOptions).Methods("OPTIONS")
 
 	router.HandleFunc("/api/user", middleware.CreateUser).Methods("POST")
-	router.HandleFunc("/api/user/{userId}", middleware.DeleteUser).Methods("DELETE")
+	router.HandleFunc("/api/user/{userName}", middleware.DeleteUser).Methods("DELETE")
 	router.HandleFunc("/api/users", middleware.GetUsers).Methods("GET")
 
 	router.HandleFunc("/api/userToken", middleware.GenerateUserToken).Methods("POST")

@@ -19,20 +19,6 @@ func writeCommonHeader(w http.ResponseWriter) http.ResponseWriter {
 	return w
 }
 
-func authenticateUser(r *http.Request, w http.ResponseWriter, isAdmin bool) error {
-	bearerToken := r.Header.Get("Authorization")
-	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
-	if userErr != nil {
-		json.NewEncoder(w).Encode("Invalid Request")
-		if userErr.Error() == "User does not have admin permissions" {
-			w.WriteHeader(http.StatusForbidden)
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
-		}
-	}
-	return userErr
-}
-
 // GetAllRecipes controller GET request
 func GetAllRecipes(w http.ResponseWriter, r *http.Request) {
 	response := writeCommonHeader(w)
@@ -221,8 +207,8 @@ func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&authData)
 	token, err := controller.GenerateUserToken(authData)
 	if err != nil && token == "failed authentication, unknown user or password" {
-		json.NewEncoder(response).Encode(token)
 		response.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(response).Encode(token)
 	} else if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
@@ -238,12 +224,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	bearerToken := r.Header.Get("Authorization")
 	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
 	if userErr != nil {
-		json.NewEncoder(response).Encode(userErr.Error())
 		if userErr.Error() == "User does not have admin permissions" {
 			response.WriteHeader(http.StatusForbidden)
 		} else {
 			response.WriteHeader(http.StatusUnauthorized)
 		}
+		json.NewEncoder(response).Encode(userErr.Error())
 	} else {
 		var requestedUser models.RequestedUser
 		_ = json.NewDecoder(r.Body).Decode(&requestedUser)
@@ -264,23 +250,14 @@ func UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
 	bearerToken := r.Header.Get("Authorization")
 	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
 	if userErr != nil {
-		json.NewEncoder(response).Encode(userErr.Error())
 		if userErr.Error() == "User does not have admin permissions" {
 			response.WriteHeader(http.StatusForbidden)
 		} else {
 			response.WriteHeader(http.StatusUnauthorized)
 		}
-	} else {
-		var requestedUser models.RequestedUser
-		_ = json.NewDecoder(r.Body).Decode(&requestedUser)
-		payload, err := controller.CreateUser(requestedUser)
-		if err != nil {
-			response.WriteHeader(http.StatusBadRequest)
-		} else {
-			response.WriteHeader(http.StatusCreated)
-			json.NewEncoder(response).Encode(payload.UserName)
-		}
+		json.NewEncoder(response).Encode(userErr.Error())
 	}
+	//TODO code update password
 }
 
 // DeleteUser controller DELETE request
@@ -290,15 +267,15 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	bearerToken := r.Header.Get("Authorization")
 	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
 	if userErr != nil {
-		json.NewEncoder(response).Encode(userErr.Error())
 		if userErr.Error() == "User does not have admin permissions" {
 			response.WriteHeader(http.StatusForbidden)
 		} else {
 			response.WriteHeader(http.StatusUnauthorized)
 		}
+		json.NewEncoder(response).Encode(userErr.Error())
 	} else {
 		params := mux.Vars(r)
-		err := controller.DeleteUser(params["userId"])
+		err := controller.DeleteUser(params["userName"])
 		if err != nil {
 			response.WriteHeader(http.StatusNotFound)
 		} else {
@@ -311,8 +288,16 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	response := writeCommonHeader(w)
 	response.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := authenticateUser(r, response, true)
-	if userErr == nil {
+	bearerToken := r.Header.Get("Authorization")
+	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
+	if userErr != nil {
+		if userErr.Error() == "User does not have admin permissions" {
+			response.WriteHeader(http.StatusForbidden)
+		} else {
+			response.WriteHeader(http.StatusUnauthorized)
+		}
+		json.NewEncoder(response).Encode(userErr.Error())
+	} else {
 		payload, err := controller.GetUsers()
 		if err != nil {
 			response.WriteHeader(http.StatusNotFound)
