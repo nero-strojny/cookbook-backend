@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func writeCommonHeader(w http.ResponseWriter) http.ResponseWriter {
+func writeCommonHeaders(w http.ResponseWriter) http.ResponseWriter {
 	acceptedHeaders := "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, X-CSRF-Token"
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -19,9 +19,35 @@ func writeCommonHeader(w http.ResponseWriter) http.ResponseWriter {
 	return w
 }
 
+func authenticateUser(response http.ResponseWriter, request *http.Request, isAdmin bool) error {
+	bearerToken := request.Header.Get("Authorization")
+	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), isAdmin)
+	if userErr != nil {
+		if userErr.Error() == "User does not have admin permissions" {
+			response.WriteHeader(http.StatusForbidden)
+		} else {
+			response.WriteHeader(http.StatusUnauthorized)
+		}
+	}
+	return userErr
+}
+
+func authenticateSpecificUser(response http.ResponseWriter, request *http.Request, userName string) error {
+	bearerToken := request.Header.Get("Authorization")
+	userErr := controller.ValidateSpecificUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), userName)
+	if userErr != nil {
+		if userErr.Error() == "User does not have admin permissions" {
+			response.WriteHeader(http.StatusForbidden)
+		} else {
+			response.WriteHeader(http.StatusUnauthorized)
+		}
+	}
+	return userErr
+}
+
 // GetAllRecipes controller GET request
 func GetAllRecipes(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "GET")
 	payload, err := controller.GetAllRecipes()
 	if err != nil {
@@ -34,7 +60,7 @@ func GetAllRecipes(w http.ResponseWriter, r *http.Request) {
 
 // GetRecipe by ID controller GET request
 func GetRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "GET")
 	params := mux.Vars(r)
 	payload, err := controller.GetRecipe(params["id"])
@@ -48,7 +74,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 
 //GetRecipeByName looks up a recipe by its exact name
 func GetRecipeByName(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "GET")
 	var recipe models.Recipe
 	json.NewDecoder(r.Body).Decode(&recipe)
@@ -63,7 +89,7 @@ func GetRecipeByName(w http.ResponseWriter, r *http.Request) {
 
 // CreateRecipe controller POST request
 func CreateRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "POST")
 	var recipe models.Recipe
 	_ = json.NewDecoder(r.Body).Decode(&recipe)
@@ -81,7 +107,7 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 
 // UpdateRecipe controller PUT request
 func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "PUT")
 	params := mux.Vars(r)
 	var recipe models.Recipe
@@ -97,7 +123,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 
 // DeleteRecipe controller DELETE request
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "DELETE")
 	params := mux.Vars(r)
 	err := controller.DeleteRecipe(params["id"])
@@ -110,7 +136,7 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 
 //SingleRecipeOptions eats options requests
 func SingleRecipeOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode("")
@@ -118,7 +144,7 @@ func SingleRecipeOptions(w http.ResponseWriter, r *http.Request) {
 
 //CreateRecipeOptions handles preflight CORS for creating a recipe
 func CreateRecipeOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "POST")
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode("")
@@ -126,7 +152,7 @@ func CreateRecipeOptions(w http.ResponseWriter, r *http.Request) {
 
 // GetCalorieLog by ID controller GET request
 func GetCalorieLog(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "GET")
 	params := mux.Vars(r)
 	payload, err := controller.GetCalorieLog(params["id"])
@@ -140,7 +166,7 @@ func GetCalorieLog(w http.ResponseWriter, r *http.Request) {
 
 // CreateCalorieLog controller POST request
 func CreateCalorieLog(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "POST")
 	var calorieLog models.CalorieLog
 	_ = json.NewDecoder(r.Body).Decode(&calorieLog)
@@ -155,7 +181,7 @@ func CreateCalorieLog(w http.ResponseWriter, r *http.Request) {
 
 // UpdateCalorieLog controller PUT request
 func UpdateCalorieLog(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "PUT")
 	params := mux.Vars(r)
 	var calorieLog models.CalorieLog
@@ -171,7 +197,7 @@ func UpdateCalorieLog(w http.ResponseWriter, r *http.Request) {
 
 // DeleteCalorieLog controller DELETE request
 func DeleteCalorieLog(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "DELETE")
 	params := mux.Vars(r)
 	err := controller.DeleteCalorieLog(params["id"])
@@ -184,7 +210,7 @@ func DeleteCalorieLog(w http.ResponseWriter, r *http.Request) {
 
 //SingleCalorieLogOptions eats options requests
 func SingleCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode("")
@@ -192,7 +218,7 @@ func SingleCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
 
 //CreateCalorieLogOptions handles preflight CORS for creating a calorie log
 func CreateCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "POST")
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode("")
@@ -200,15 +226,14 @@ func CreateCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
 
 //GenerateUserToken refreshes a token
 func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "POST")
 	var authData models.AuthData
 	accessTokenObject := models.AccessToken{}
 	_ = json.NewDecoder(r.Body).Decode(&authData)
 	token, err := controller.GenerateUserToken(authData)
-	if err != nil && token == "failed authentication, unknown user or password" {
-		response.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(response).Encode(token)
+	if err != nil && err.Error() == "failed authentication, unknown user or password" {
+		response.WriteHeader(http.StatusBadRequest)
 	} else if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
@@ -219,97 +244,86 @@ func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 
 //CreateUser creates a new user in the database
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
-	response.Header().Set("Access-Control-Allow-Methods", "POST")
-	bearerToken := r.Header.Get("Authorization")
-	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	userErr := authenticateUser(w, r, true)
 	if userErr != nil {
-		if userErr.Error() == "User does not have admin permissions" {
-			response.WriteHeader(http.StatusForbidden)
-		} else {
-			response.WriteHeader(http.StatusUnauthorized)
-		}
-		json.NewEncoder(response).Encode(userErr.Error())
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		var requestedUser models.RequestedUser
 		_ = json.NewDecoder(r.Body).Decode(&requestedUser)
 		payload, err := controller.CreateUser(requestedUser)
 		if err != nil {
-			response.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 		} else {
-			response.WriteHeader(http.StatusCreated)
-			json.NewEncoder(response).Encode(payload.UserName)
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(payload.UserName)
 		}
 	}
 }
 
 //UpdateUserPassword updates a user's password in the database
 func UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
-	response.Header().Set("Access-Control-Allow-Methods", "PUT")
-	bearerToken := r.Header.Get("Authorization")
-	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
-	if userErr != nil {
-		if userErr.Error() == "User does not have admin permissions" {
-			response.WriteHeader(http.StatusForbidden)
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "PUT")
+	var updatedPassword models.UpdatedPassword
+	_ = json.NewDecoder(r.Body).Decode(&updatedPassword)
+	err := controller.UpdateUserPassword(updatedPassword)
+	if err != nil {
+		if err.Error() == "Username or password is not correct" {
+			w.WriteHeader(http.StatusBadRequest)
 		} else {
-			response.WriteHeader(http.StatusUnauthorized)
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		json.NewEncoder(response).Encode(userErr.Error())
 	}
-	//TODO code update password
 }
 
 // DeleteUser controller DELETE request
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
-	response.Header().Set("Access-Control-Allow-Methods", "DELETE")
-	bearerToken := r.Header.Get("Authorization")
-	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	userErr := authenticateUser(w, r, true)
 	if userErr != nil {
-		if userErr.Error() == "User does not have admin permissions" {
-			response.WriteHeader(http.StatusForbidden)
-		} else {
-			response.WriteHeader(http.StatusUnauthorized)
-		}
-		json.NewEncoder(response).Encode(userErr.Error())
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		params := mux.Vars(r)
 		err := controller.DeleteUser(params["userName"])
 		if err != nil {
-			response.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
 		} else {
-			response.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
 
 // GetUsers controller GET request
 func GetUsers(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
-	response.Header().Set("Access-Control-Allow-Methods", "GET")
-	bearerToken := r.Header.Get("Authorization")
-	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), true)
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	userErr := authenticateUser(w, r, true)
 	if userErr != nil {
-		if userErr.Error() == "User does not have admin permissions" {
-			response.WriteHeader(http.StatusForbidden)
-		} else {
-			response.WriteHeader(http.StatusUnauthorized)
-		}
-		json.NewEncoder(response).Encode(userErr.Error())
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		payload, err := controller.GetUsers()
 		if err != nil {
-			response.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
 		} else {
-			json.NewEncoder(response).Encode(payload)
+			json.NewEncoder(w).Encode(payload)
 		}
 	}
 }
 
+//SingleUserOptions eats options requests
+func SingleUserOptions(w http.ResponseWriter, r *http.Request) {
+	response := writeCommonHeaders(w)
+	response.Header().Set("Access-Control-Allow-Methods", "PUT")
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode("")
+}
+
 //GenerateUserTokenOptions handles preflight CORS for creating a calorie log
 func GenerateUserTokenOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeader(w)
+	response := writeCommonHeaders(w)
 	response.Header().Set("Access-Control-Allow-Methods", "POST")
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode("")

@@ -80,5 +80,7 @@ type AccessToken struct {
 
 // UpdatedPassword contains the updated password information
 type UpdatedPassword struct {
-	Password string `json:"password,omitEmpty"`
+	UserName        string `json:"userName,omitEmpty"`
+	CurrentPassword string `json:"currentPassword,omitEmpty"`
+	NewPassword     string `json:"newPassword,omitEmpty"`
 }

@@ -2,15 +2,19 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"server/controller"
 	"server/models"
 	"server/router"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var userRouter = router.Router()
@@ -130,6 +134,68 @@ func TestGetUsers(t *testing.T) {
 	deleteUser(defaultNonAdminUser.UserName, adminToken)
 }
 
+func TestUpdatedUserPassword(t *testing.T) {
+	// setup, create a user
+	createUser(defaultNonAdminUser, adminToken)
+
+	var updatedPassword = models.UpdatedPassword{
+		UserName:        "testUser",
+		CurrentPassword: "password123",
+		NewPassword:     "newPassword123",
+	}
+
+	jsonUserPassword, _ := json.Marshal(updatedPassword)
+	updateUserRequest, _ := http.NewRequest("PUT", "/api/user", bytes.NewBuffer(jsonUserPassword))
+	updateUserResponse := httptest.NewRecorder()
+	userRouter.ServeHTTP(updateUserResponse, updateUserRequest)
+	checkPastPasswordResponse := generateUserToken(defaultNonAdminAuthData)
+
+	// assert the correct status code and body, check that the old password wouldn't work
+	assert.Equal(t, 200, updateUserResponse.Code, "OK Response is expected")
+	assert.Equal(t, 400, checkPastPasswordResponse.Code, "Invalid Input Response is expected")
+
+	// cleanup
+	deleteUser(defaultNonAdminUser.UserName, adminToken)
+}
+
+func TestNeedTokenToCreateUsers(t *testing.T) {
+	//try using the nonAdmin's token to create another user
+	createResponse := createUser(defaultNonAdminUser2, "")
+
+	// assert the correct status code
+	assert.Equal(t, 401, createResponse.Code, "Unauthorized Response is expected")
+
+	// cleanup
+	deleteUser(defaultNonAdminUser.UserName, adminToken)
+}
+
+func TestNeedTokenToDeleteUsers(t *testing.T) {
+	// generate a token with non admin user data, create a second user
+	createUser(defaultNonAdminUser, adminToken)
+
+	// delete the same user
+	deleteResponse := deleteUser(defaultNonAdminUser.UserName, "")
+
+	// assert the correct status code
+	assert.Equal(t, 401, deleteResponse.Code, "Unauthorized Response is expected")
+
+	// cleanup
+	deleteUser(defaultNonAdminUser.UserName, adminToken)
+}
+
+func TestNeedTokenToGetUsers(t *testing.T) {
+	// get all the users
+	getUserRequest, _ := http.NewRequest("GET", "/api/users", nil)
+	getUserResponse := httptest.NewRecorder()
+	getUserRequest.Header.Set("Authorization", "Bearer ")
+	userRouter.ServeHTTP(getUserResponse, getUserRequest)
+
+	// assert the correct status code
+	assert.Equal(t, 401, getUserResponse.Code, "Unauthorized Response is expected")
+	// cleanup
+	deleteUser(defaultNonAdminUser.UserName, adminToken)
+}
+
 func TestOnlyAdminCanCreateUsers(t *testing.T) {
 	// generate a token with non admin user data
 	createUser(defaultNonAdminUser, adminToken)
@@ -185,6 +251,47 @@ func TestOnlyAdminCanGetUsers(t *testing.T) {
 	// assert the correct status code
 	assert.Equal(t, 403, getUserResponse.Code, "Forbidden Response is expected")
 	// cleanup
+	deleteUser(defaultNonAdminUser.UserName, adminToken)
+}
+
+func TestErrorOnWrongPassword(t *testing.T) {
+	// setup, create a user
+	createUser(defaultNonAdminUser, adminToken)
+
+	var defaultNonAdminAuthData = models.AuthData{
+		UserName: "testUser",
+		Password: "wrongPassword",
+	}
+
+	response := generateUserToken(defaultNonAdminAuthData)
+
+	// assert the correct status code
+	assert.Equal(t, 400, response.Code, "Invalid Input Response is expected")
+
+	// cleanup
+	deleteUser(defaultNonAdminUser.UserName, adminToken)
+}
+
+func TestExpiredPassword(t *testing.T) {
+	// setup, change the user's password
+	expiryTime := time.Now().AddDate(0, 0, -1)
+	result := models.User{}
+	getFilter := bson.M{"username": "testAdminUser"}
+	controller.UserCollection.FindOne(context.Background(), getFilter).Decode(&result)
+	result.ExpiryDate = expiryTime.Format("2006.01.02 15:04:05")
+	controller.UserCollection.ReplaceOne(context.Background(), getFilter, result)
+
+	response := createUser(defaultNonAdminUser, adminToken)
+
+	// assert the correct status code
+	assert.Equal(t, 401, response.Code, "Unauthorized Response is expected")
+
+	// cleanup
+	accessTokenObject := models.AccessToken{}
+	tokenResponse := generateUserToken(defaultAdminAuthData)
+	body, _ := ioutil.ReadAll(tokenResponse.Body)
+	json.Unmarshal(body, &accessTokenObject)
+	adminToken = accessTokenObject.AccessToken
 	deleteUser(defaultNonAdminUser.UserName, adminToken)
 }
 

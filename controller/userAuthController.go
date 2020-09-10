@@ -10,6 +10,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,17 +38,56 @@ func CreateUser(requestedUser models.RequestedUser) (models.User, error) {
 		insertedUser.UserName = requestedUser.UserName
 		insertedUser.UserType = requestedUser.UserType
 		bytes, err := bcrypt.GenerateFromPassword([]byte(requestedUser.Password), 14)
-		insertedUser.PasswordHash = string(bytes)
-		result, err := UserCollection.InsertOne(context.Background(), insertedUser)
-
 		if err != nil {
 			return models.User{}, err
+		}
+		insertedUser.PasswordHash = string(bytes)
+		result, insertErr := UserCollection.InsertOne(context.Background(), insertedUser)
+
+		if insertErr != nil {
+			return models.User{}, insertErr
 		}
 
 		insertedUser.UserID = result.InsertedID.(primitive.ObjectID)
 		return insertedUser, nil
 	}
 	return models.User{}, errors.New("Username already taken")
+}
+
+//UpdateUserPassword updates a password
+func UpdateUserPassword(updatedPassword models.UpdatedPassword) error {
+	getResult := models.User{}
+	getFilter := bson.M{"username": updatedPassword.UserName}
+	getErr := UserCollection.FindOne(context.Background(), getFilter).Decode(&getResult)
+	if getErr != nil {
+		return errors.New("Username or password is not correct")
+	}
+	hashErr := bcrypt.CompareHashAndPassword([]byte(getResult.PasswordHash), []byte(updatedPassword.CurrentPassword))
+	if hashErr != nil {
+		return errors.New("Username or password is not correct")
+	} else {
+		bytes, err := bcrypt.GenerateFromPassword([]byte(updatedPassword.NewPassword), 14)
+
+		if err != nil {
+			return err
+		}
+
+		getResult.PasswordHash = string(bytes)
+		getResult.ExpiryDate = ""
+		getResult.AccessToken = ""
+		opts := options.Replace().SetUpsert(false)
+		updateResult, updateErr := UserCollection.ReplaceOne(context.Background(), getFilter, getResult, opts)
+
+		if updateErr != nil {
+			return updateErr
+		}
+
+		if updateResult.UpsertedID != nil {
+			return errors.New("Username or password is not correct")
+		}
+
+		return nil
+	}
 }
 
 //GetUsers - gets users
@@ -118,7 +158,7 @@ func GenerateUserToken(authData models.AuthData) (string, error) {
 	}
 
 	if updateErr != nil || updateResult.ModifiedCount != 1 {
-		return "", errors.New("failed authentication")
+		return "", updateErr
 	}
 
 	return result.AccessToken, nil
@@ -133,14 +173,31 @@ func ValidateUser(accessToken string, restrictAdmin bool) error {
 	result := models.User{}
 	filter := bson.M{"accesstoken": accessToken}
 	err := UserCollection.FindOne(context.Background(), filter).Decode(&result)
-	if err != nil || len(result.ExpiryDate) == 0 || result.ExpiryDate < currentTime {
+	if err != nil {
 		return err
-	} else if result.ExpiryDate < currentTime {
+	} else if len(result.ExpiryDate) == 0 || result.ExpiryDate < currentTime {
 		return errors.New("Expired Token")
 	} else if restrictAdmin && result.UserType != "admin" {
 		return errors.New("User does not have admin permissions")
 	} else {
 		return nil
 	}
+}
 
+//ValidateSpecificUser
+func ValidateSpecificUser(accessToken string, userName string) error {
+	if len(accessToken) == 0 {
+		return errors.New("No token in request")
+	}
+	currentTime := time.Now().Format("2006.01.02 15:04:05")
+	result := models.User{}
+	filter := bson.M{"accesstoken": accessToken}
+	err := UserCollection.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil || len(result.ExpiryDate) == 0 || result.ExpiryDate < currentTime {
+		return err
+	} else if result.UserName != userName {
+		return errors.New("Invalid permissions")
+	} else {
+		return nil
+	}
 }
