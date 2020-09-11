@@ -36,118 +36,135 @@ func authenticateSpecificUser(response http.ResponseWriter, request *http.Reques
 	bearerToken := request.Header.Get("Authorization")
 	userErr := controller.ValidateSpecificUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), userName)
 	if userErr != nil {
-		if userErr.Error() == "User does not have admin permissions" {
-			response.WriteHeader(http.StatusForbidden)
-		} else {
-			response.WriteHeader(http.StatusUnauthorized)
-		}
+		response.WriteHeader(http.StatusUnauthorized)
 	}
 	return userErr
 }
 
 // GetAllRecipes controller GET request
 func GetAllRecipes(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "GET")
-	payload, err := controller.GetAllRecipes()
-	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	userErr := authenticateUser(w, r, false)
+	if userErr != nil {
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		response.WriteHeader(http.StatusOK)
-		json.NewEncoder(response).Encode(payload)
+		payload, err := controller.GetAllRecipes()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(payload)
+		}
 	}
 }
 
 // GetRecipe by ID controller GET request
 func GetRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "GET")
-	params := mux.Vars(r)
-	payload, err := controller.GetRecipe(params["id"])
-	if err != nil {
-		response.WriteHeader(http.StatusNotFound)
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	userErr := authenticateUser(w, r, false)
+	if userErr != nil {
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		response.WriteHeader(http.StatusOK)
-		json.NewEncoder(response).Encode(payload)
+		params := mux.Vars(r)
+		payload, err := controller.GetRecipe(params["id"])
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(payload)
+		}
 	}
 }
 
 //GetRecipeByName looks up a recipe by its exact name
 func GetRecipeByName(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "GET")
-	var recipe models.Recipe
-	json.NewDecoder(r.Body).Decode(&recipe)
-	payload, err := controller.SearchRecipe(recipe.RecipeName)
-	if err != nil {
-		response.WriteHeader(http.StatusBadRequest)
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	userErr := authenticateUser(w, r, false)
+	if userErr != nil {
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		response.WriteHeader(http.StatusOK)
-		json.NewEncoder(response).Encode(payload)
+		var recipe models.Recipe
+		json.NewDecoder(r.Body).Decode(&recipe)
+		payload, err := controller.SearchRecipe(recipe.RecipeName)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(payload)
+		}
 	}
 }
 
 // CreateRecipe controller POST request
 func CreateRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "POST")
-	var recipe models.Recipe
-	_ = json.NewDecoder(r.Body).Decode(&recipe)
-	payload, invalidFields, err := controller.CreateRecipe(recipe)
-	if err != nil {
-		response.WriteHeader(http.StatusBadRequest)
-		if len(invalidFields) > 0 {
-			json.NewEncoder(response).Encode(invalidFields)
-		}
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	userErr := authenticateUser(w, r, false)
+	if userErr != nil {
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		response.WriteHeader(http.StatusCreated)
-		json.NewEncoder(response).Encode(payload)
+		var recipe models.Recipe
+		_ = json.NewDecoder(r.Body).Decode(&recipe)
+		payload, invalidFields, err := controller.CreateRecipe(recipe)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			if len(invalidFields) > 0 {
+				json.NewEncoder(w).Encode(invalidFields)
+			}
+		} else {
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(payload)
+		}
 	}
 }
 
 // UpdateRecipe controller PUT request
 func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "PUT")
+	writeCommonHeaders(w)
 	params := mux.Vars(r)
-	var recipe models.Recipe
-	json.NewDecoder(r.Body).Decode(&recipe)
-	payload, err := controller.UpdateRecipe(params["id"], recipe)
-	if err != nil {
-		response.WriteHeader(http.StatusBadRequest)
+	w.Header().Set("Access-Control-Allow-Methods", "PUT")
+	getPayload, getErr := controller.GetRecipe(params["id"])
+	if getErr != nil {
+		w.WriteHeader(http.StatusNotFound)
+	}
+	userErr := authenticateSpecificUser(w, r, getPayload.UserName)
+	if userErr != nil {
+		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		response.WriteHeader(http.StatusOK)
-		json.NewEncoder(response).Encode(payload)
+		var recipe models.Recipe
+		json.NewDecoder(r.Body).Decode(&recipe)
+		payload, err := controller.UpdateRecipe(params["id"], recipe)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			json.NewEncoder(w).Encode(payload)
+		}
 	}
 }
 
 // DeleteRecipe controller DELETE request
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "DELETE")
+	writeCommonHeaders(w)
 	params := mux.Vars(r)
-	err := controller.DeleteRecipe(params["id"])
-	if err != nil {
-		response.WriteHeader(http.StatusNotFound)
-	} else {
-		response.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
+	getPayload, getErr := controller.GetRecipe(params["id"])
+	if getErr != nil {
+		w.WriteHeader(http.StatusNotFound)
 	}
-}
-
-//SingleRecipeOptions eats options requests
-func SingleRecipeOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
-	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode("")
-}
-
-//CreateRecipeOptions handles preflight CORS for creating a recipe
-func CreateRecipeOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "POST")
-	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode("")
+	userErr := authenticateSpecificUser(w, r, getPayload.UserName)
+	if userErr != nil {
+		json.NewEncoder(w).Encode(userErr.Error())
+	} else {
+		err := controller.DeleteRecipe(params["id"])
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
 }
 
 // GetCalorieLog by ID controller GET request
@@ -206,22 +223,6 @@ func DeleteCalorieLog(w http.ResponseWriter, r *http.Request) {
 	} else {
 		response.WriteHeader(http.StatusNoContent)
 	}
-}
-
-//SingleCalorieLogOptions eats options requests
-func SingleCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
-	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode("")
-}
-
-//CreateCalorieLogOptions handles preflight CORS for creating a calorie log
-func CreateCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
-	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "POST")
-	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode("")
 }
 
 //GenerateUserToken refreshes a token
@@ -313,6 +314,38 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//SingleRecipeOptions eats options requests
+func SingleRecipeOptions(w http.ResponseWriter, r *http.Request) {
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("")
+}
+
+//CreateRecipeOptions handles preflight CORS for creating a recipe
+func CreateRecipeOptions(w http.ResponseWriter, r *http.Request) {
+	response := writeCommonHeaders(w)
+	response.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE")
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode("")
+}
+
+//SingleCalorieLogOptions eats options requests
+func SingleCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
+	response := writeCommonHeaders(w)
+	response.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode("")
+}
+
+//CreateCalorieLogOptions handles preflight CORS for creating a calorie log
+func CreateCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
+	response := writeCommonHeaders(w)
+	response.Header().Set("Access-Control-Allow-Methods", "POST, GET")
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode("")
+}
+
 //SingleUserOptions eats options requests
 func SingleUserOptions(w http.ResponseWriter, r *http.Request) {
 	response := writeCommonHeaders(w)
@@ -324,7 +357,7 @@ func SingleUserOptions(w http.ResponseWriter, r *http.Request) {
 //GenerateUserTokenOptions handles preflight CORS for creating a calorie log
 func GenerateUserTokenOptions(w http.ResponseWriter, r *http.Request) {
 	response := writeCommonHeaders(w)
-	response.Header().Set("Access-Control-Allow-Methods", "POST")
+	response.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode("")
 }

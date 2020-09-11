@@ -11,7 +11,8 @@ func Router() *mux.Router {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/recipes", middleware.GetAllRecipes).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/recipes", middleware.GetAllRecipes).Methods("GET")
+	router.HandleFunc("/api/recipes", middleware.SingleRecipeOptions).Methods("OPTIONS")
 	router.HandleFunc("/api/recipe/{id}", middleware.GetRecipe).Methods("GET")
 	router.HandleFunc("/api/recipe/{id}", middleware.DeleteRecipe).Methods("DELETE")
 	router.HandleFunc("/api/recipe/{id}", middleware.UpdateRecipe).Methods("PUT")

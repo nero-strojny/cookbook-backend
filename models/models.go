@@ -16,7 +16,7 @@ type Recipe struct {
 	Rating          int                `json:"rating"`
 	Servings        int                `json:"servings"`
 	Calories        int                `json:"calories"`
-	UserID          string             `json:"userId,omitempty"`
+	UserName        string             `json:"userName,omitempty"`
 	Private         bool               `json:"private,omitempty"`
 }
 
@@ -39,12 +39,13 @@ type CalorieLog struct {
 	EnteredDate  string             `json:"enteredDate,omitempty"`
 	Calories     int                `json:"calories,omitempty"`
 	Description  string             `json:"description,omitempty"`
-	UserID       string             `json:"userId,omitempty"`
+	UserName     string             `json:"userName,omitempty"`
 }
 
 // UserData is data pertaining to the user's physical characteristics
 type UserData struct {
 	UserID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserName            string             `json:"userName,omitempty"`
 	Height              int                `json:"height,omitEmpty"`
 	Weight              int                `json:"weight,omitEmpty"`
 	MaintenanceCalories int                `json:"maintenanceCalories,omitEmpty"`

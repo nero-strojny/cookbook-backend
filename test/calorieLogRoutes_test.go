@@ -18,7 +18,7 @@ var calorieLogRouter = router.Router()
 var defaultCalorieLog = models.CalorieLog{
 	Calories:    500,
 	Description: "test",
-	UserID:      "testUser",
+	UserName:    "testUser",
 }
 
 func createCalorieLog(calorieLog models.CalorieLog) *httptest.ResponseRecorder {
@@ -152,7 +152,7 @@ func TestDeleteCalorieLogWithUnknownID(t *testing.T) {
 
 func calorieLogFieldsAreExpected(t *testing.T, calorieLog1 models.CalorieLog, calorieLog2 models.CalorieLog) {
 	assert.NotNilf(t, calorieLog1.EnteredDate, "EnteredDate should be set")
-	assert.Equal(t, calorieLog1.UserID, calorieLog2.UserID, "Inputted UserID value expected")
+	assert.Equal(t, calorieLog1.UserName, calorieLog2.UserName, "Inputted UserName value expected")
 	assert.Equal(t, calorieLog1.Calories, calorieLog2.Calories, "Inputted Calories is expected")
 	assert.Equal(t, calorieLog1.Description, calorieLog2.Description, "Inputted Description is expected")
 }

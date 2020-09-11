@@ -14,48 +14,110 @@ import (
 )
 
 var recipeRouter = router.Router()
+var recipeAdminToken string
 
 var defaultRecipe = models.Recipe{
 	RecipeName:      "recipe",
 	Private:         false,
 	CreatedDate:     "2020.08.16 22:20:53",
 	LastUpdatedDate: "2020.08.16 22:20:53",
-	Author:          "testUser",
+	Author:          "someAuthor",
 	Rating:          5,
 	Servings:        2,
 	Calories:        500,
 	PrepTime:        5,
 	CookTime:        5,
+	UserName:        "testAdminUser",
 }
 
-func createRecipe(recipe models.Recipe) *httptest.ResponseRecorder {
-	jsonRecipe, _ := json.Marshal(recipe)
+func createRecipe(inputRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
+	outputRecipe := models.Recipe{}
+	jsonRecipe, _ := json.Marshal(inputRecipe)
 	request, _ := http.NewRequest("POST", "/api/recipe", bytes.NewBuffer(jsonRecipe))
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	response := httptest.NewRecorder()
+	recipeRouter.ServeHTTP(response, request)
+	body, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(body, &outputRecipe)
+	return response, outputRecipe
+}
+
+func getRecipeByID(recipeID string, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
+	recipe := models.Recipe{}
+	request, _ := http.NewRequest("GET", "/api/recipe/"+recipeID, nil)
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	response := httptest.NewRecorder()
+	recipeRouter.ServeHTTP(response, request)
+	body, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(body, &recipe)
+	return response, recipe
+}
+
+func getAllRecipes(accessToken string) (*httptest.ResponseRecorder, []models.Recipe) {
+	recipes := []models.Recipe{}
+	request, _ := http.NewRequest("GET", "/api/recipes", nil)
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	response := httptest.NewRecorder()
+	recipeRouter.ServeHTTP(response, request)
+	body, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(body, &recipes)
+	return response, recipes
+}
+
+func searchRecipeByName(recipeName string, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
+	var searchRecipe = models.Recipe{
+		RecipeName: recipeName,
+	}
+	recipe := models.Recipe{}
+	jsonRecipe, _ := json.Marshal(searchRecipe)
+	request, _ := http.NewRequest("POST", "/api/recipe/search", bytes.NewBuffer(jsonRecipe))
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	response := httptest.NewRecorder()
+	recipeRouter.ServeHTTP(response, request)
+	body, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(body, &recipe)
+	return response, recipe
+}
+
+func updateRecipe(inputRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
+	outputRecipe := models.Recipe{}
+	jsonRecipe, _ := json.Marshal(inputRecipe)
+	request, _ := http.NewRequest("PUT", "/api/recipe/"+inputRecipe.RecipeID.Hex(), bytes.NewBuffer(jsonRecipe))
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	response := httptest.NewRecorder()
+	recipeRouter.ServeHTTP(response, request)
+	body, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(body, &outputRecipe)
+	return response, outputRecipe
+}
+
+func deleteRecipe(recipeID string, accessToken string) *httptest.ResponseRecorder {
+	request, _ := http.NewRequest("DELETE", "/api/recipe/"+recipeID, nil)
+	request.Header.Set("Authorization", "Bearer "+accessToken)
 	response := httptest.NewRecorder()
 	recipeRouter.ServeHTTP(response, request)
 	return response
 }
 
-func deleteRecipe(recipeID string) *httptest.ResponseRecorder {
-	request, _ := http.NewRequest("DELETE", "/api/recipe/"+recipeID, nil)
-	response := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(response, request)
-	return response
+func TestRecipeSetUp(t *testing.T) {
+	// generate a token with admin user data
+	accessTokenObject := models.AccessToken{}
+	response := generateUserToken(defaultAdminAuthData)
+	body, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(body, &accessTokenObject)
+	recipeAdminToken = accessTokenObject.AccessToken
 }
 
 func TestCreateRecipe(t *testing.T) {
 	// create a recipe
-	recipe := models.Recipe{}
-	response := createRecipe(defaultRecipe)
-	body, _ := ioutil.ReadAll(response.Body)
-	json.Unmarshal(body, &recipe)
+	response, recipe := createRecipe(defaultRecipe, recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 201, response.Code, "OK response is expected")
 	recipeFieldsAreExpected(t, recipe, defaultRecipe)
 
 	// cleanup
-	deleteRecipe(recipe.RecipeID.Hex())
+	deleteRecipe(recipe.RecipeID.Hex(), recipeAdminToken)
 }
 
 func TestCreateRecipeWithInvalidFields(t *testing.T) {
@@ -63,7 +125,7 @@ func TestCreateRecipeWithInvalidFields(t *testing.T) {
 	invalidRecipe := models.Recipe{}
 	invalidRecipe = defaultRecipe
 	invalidRecipe.RecipeName = ""
-	response := createRecipe(invalidRecipe)
+	response, _ := createRecipe(invalidRecipe, recipeAdminToken)
 
 	// assert the correct status code
 	assert.Equal(t, 400, response.Code, "Invalid input response is expected")
@@ -71,35 +133,22 @@ func TestCreateRecipeWithInvalidFields(t *testing.T) {
 
 func TestGetRecipe(t *testing.T) {
 	// setUp, create a recipe
-	createdRecipe := models.Recipe{}
-	createResponse := createRecipe(defaultRecipe)
-	createBody, _ := ioutil.ReadAll(createResponse.Body)
-	json.Unmarshal(createBody, &createdRecipe)
+	_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
 
 	// make a getRecipe for the recipe we just created
-	getRecipe := models.Recipe{}
-	getRequest, _ := http.NewRequest("GET", "/api/recipe/"+createdRecipe.RecipeID.Hex(), nil)
-	getResponse := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(getResponse, getRequest)
-	getBody, _ := ioutil.ReadAll(getResponse.Body)
-	json.Unmarshal(getBody, &getRecipe)
+	getResponse, getRecipe := getRecipeByID(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, getResponse.Code, "OK response is expected")
 	recipeFieldsAreExpected(t, getRecipe, defaultRecipe)
 
 	// cleanup
-	deleteRecipe(createdRecipe.RecipeID.Hex())
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 }
 
 func TestGetRecipeWithUnknownRecipe(t *testing.T) {
 	// try to get a recipe with an unknown id
-	getRecipe := models.Recipe{}
-	getRequest, _ := http.NewRequest("GET", "/api/recipe/unknownRecipeId", nil)
-	getResponse := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(getResponse, getRequest)
-	getBody, _ := ioutil.ReadAll(getResponse.Body)
-	json.Unmarshal(getBody, &getRecipe)
+	getResponse, _ := getRecipeByID("unknownRecipeId", recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 404, getResponse.Code, "Not Found response is expected")
@@ -107,22 +156,11 @@ func TestGetRecipeWithUnknownRecipe(t *testing.T) {
 
 func TestGetAll(t *testing.T) {
 	// setUp, create some recipes
-	createdRecipe1 := models.Recipe{}
-	createResponse1 := createRecipe(defaultRecipe)
-	createBody1, _ := ioutil.ReadAll(createResponse1.Body)
-	json.Unmarshal(createBody1, &createdRecipe1)
-	createdRecipe2 := models.Recipe{}
-	createResponse2 := createRecipe(defaultRecipe)
-	createBody2, _ := ioutil.ReadAll(createResponse2.Body)
-	json.Unmarshal(createBody2, &createdRecipe2)
+	_, createdRecipe1 := createRecipe(defaultRecipe, recipeAdminToken)
+	_, createdRecipe2 := createRecipe(defaultRecipe, recipeAdminToken)
 
 	// make a getRecipe for the recipe we just created
-	recipes := []models.Recipe{}
-	getRequest, _ := http.NewRequest("GET", "/api/recipes", nil)
-	getResponse := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(getResponse, getRequest)
-	getBody, _ := ioutil.ReadAll(getResponse.Body)
-	json.Unmarshal(getBody, &recipes)
+	getResponse, recipes := getAllRecipes(recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, getResponse.Code, "OK response is expected")
@@ -130,101 +168,173 @@ func TestGetAll(t *testing.T) {
 	assert.Contains(t, recipes, createdRecipe2, "The second created recipe should be in the results")
 
 	// cleanup
-	deleteRecipe(createdRecipe1.RecipeID.Hex())
-	deleteRecipe(createdRecipe2.RecipeID.Hex())
+	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
+	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
 }
 
 func TestSearchRecipe(t *testing.T) {
 	// set up, create a recipe with a unique name
-	createdRecipe := models.Recipe{}
 	specificNamedRecipe := defaultRecipe
 	specificNamedRecipe.RecipeName = "Specific Recipe Name"
-	createResponse := createRecipe(specificNamedRecipe)
-	createBody, _ := ioutil.ReadAll(createResponse.Body)
-	json.Unmarshal(createBody, &createdRecipe)
+	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	var searchRecipe = models.Recipe{
-		RecipeName: "Specific Recipe Name",
-	}
-	resultRecipe := models.Recipe{}
-	jsonRecipe, _ := json.Marshal(searchRecipe)
-	searchRequest, _ := http.NewRequest("POST", "/api/recipe/search", bytes.NewBuffer(jsonRecipe))
-	searchResponse := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(searchResponse, searchRequest)
-	searchBody, _ := ioutil.ReadAll(searchResponse.Body)
-	json.Unmarshal(searchBody, &resultRecipe)
+	searchResponse, resultRecipe := searchRecipeByName("Specific Recipe Name", recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
 	recipeFieldsAreExpected(t, resultRecipe, createdRecipe)
 
 	// cleanup
-	deleteRecipe(createdRecipe.RecipeID.Hex())
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 }
 
 func TestUpdateRecipe(t *testing.T) {
 	// setUp, create a recipe
-	createdRecipe := models.Recipe{}
-	createResponse := createRecipe(defaultRecipe)
-	createBody, _ := ioutil.ReadAll(createResponse.Body)
-	json.Unmarshal(createBody, &createdRecipe)
+	_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
 
 	createdRecipe.RecipeName = "updatedRecipe"
-	updatedRecipe := createdRecipe
-	updatedRecipe.RecipeName = "updatedRecipe"
-	jsonRecipe, _ := json.Marshal(updatedRecipe)
-	updatedRequest, _ := http.NewRequest("PUT", "/api/recipe/"+createdRecipe.RecipeID.Hex(), bytes.NewBuffer(jsonRecipe))
-	updatedResponse := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(updatedResponse, updatedRequest)
-	updatedBody, _ := ioutil.ReadAll(updatedResponse.Body)
-	json.Unmarshal(updatedBody, &updatedRecipe)
+	updatedResponse, updatedRecipe := updateRecipe(createdRecipe, recipeAdminToken)
 
 	// make a getRecipe for the recipe we just updated
-	getRecipe := models.Recipe{}
-	getRequest, _ := http.NewRequest("GET", "/api/recipe/"+createdRecipe.RecipeID.Hex(), nil)
-	getResponse := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(getResponse, getRequest)
-	getBody, _ := ioutil.ReadAll(getResponse.Body)
-	json.Unmarshal(getBody, &getRecipe)
+	getResponse, getRecipe := getRecipeByID(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, getResponse.Code, "OK response is expected")
+	assert.Equal(t, 200, updatedResponse.Code, "OK response is expected")
+	assert.Equal(t, "updatedRecipe", updatedRecipe.RecipeName)
 	assert.Equal(t, "updatedRecipe", getRecipe.RecipeName)
 
 	// cleanup
-	deleteRecipe(createdRecipe.RecipeID.Hex())
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 }
 
 func TestDeleteRecipe(t *testing.T) {
 	// set up, create a recipe
-	recipe := models.Recipe{}
-	createResponse := createRecipe(defaultRecipe)
-	body, _ := ioutil.ReadAll(createResponse.Body)
-	json.Unmarshal(body, &recipe)
+	_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
 
 	// delete a recipe
-	deleteResponse := deleteRecipe(recipe.RecipeID.Hex())
+	deleteResponse := deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 204, deleteResponse.Code, "OK response is expected")
 
 	//try to get the recipe again to ensure it is deleted
-	getRequest, _ := http.NewRequest("GET", "/api/recipe/unknownRecipeId", nil)
-	getResponse := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(getResponse, getRequest)
+	getResponse, _ := getRecipeByID(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 404, getResponse.Code, "Not Found response is expected")
 
 }
 
-func TestDeleteRecipeWithUnknownID(t *testing.T) {
-	// delete a recipe
-	deleteResponse := deleteRecipe("unknownRecipeID")
+func TestCreateRecipeWithInvalidToken(t *testing.T) {
+	// create a recipe
+	response, recipe := createRecipe(defaultRecipe, "invalidToken")
 
 	// assert the correct status code and body
-	assert.Equal(t, 404, deleteResponse.Code, "Not Found response is expected")
+	assert.Equal(t, 401, response.Code, "Unauthorized response is expected")
+
+	// cleanup
+	deleteRecipe(recipe.RecipeID.Hex(), recipeAdminToken)
+
+}
+
+func TestGetRecipeWithInvalidToken(t *testing.T) {
+	// setUp, create a recipe
+	_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
+
+	// make a getRecipe for the recipe we just created
+	getResponse, _ := getRecipeByID(createdRecipe.RecipeID.Hex(), "invalidToken")
+
+	// assert the correct status code and body
+	assert.Equal(t, 401, getResponse.Code, "Unauthorized response is expected")
+
+	// cleanup
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
+
+}
+
+func TestGetAllRecipesWithInvalidToken(t *testing.T) {
+	// setUp, create some recipes
+	_, createdRecipe1 := createRecipe(defaultRecipe, recipeAdminToken)
+	_, createdRecipe2 := createRecipe(defaultRecipe, recipeAdminToken)
+
+	// make a getRecipe for the recipe we just created
+	getResponse, _ := getAllRecipes("invalidToken")
+
+	// assert the correct status code and body
+	assert.Equal(t, 401, getResponse.Code, "Unauthorized response is expected")
+
+	// cleanup
+	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
+	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
+
+}
+
+func TestSearchRecipeWithInvalidToken(t *testing.T) {
+	// set up, create a recipe with a unique name
+	specificNamedRecipe := defaultRecipe
+	specificNamedRecipe.RecipeName = "Specific Recipe Name"
+	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
+
+	// make a search for the recipe we just created
+	searchResponse, _ := searchRecipeByName("Specific Recipe Name", "invalidToken")
+
+	// assert the correct status code and body
+	assert.Equal(t, 401, searchResponse.Code, "Unauthorized response is expected")
+
+	// cleanup
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
+
+}
+
+func TestDeleteRecipeWithUnknownID(t *testing.T) {
+	// delete a recipe
+	deleteResponse := deleteRecipe("unknownRecipeID", recipeAdminToken)
+
+	// assert the correct status code and body
+	assert.Equal(t, 404, deleteResponse.Code, "Unauthorized response is expected")
+}
+
+func TestUpdateRecipeWithOtherUser(t *testing.T) {
+	//setUp create a recipe and a user
+	createUser(defaultNonAdminUser, recipeAdminToken)
+	accessTokenObject := models.AccessToken{}
+	userResponse := generateUserToken(defaultNonAdminAuthData)
+	body, _ := ioutil.ReadAll(userResponse.Body)
+	json.Unmarshal(body, &accessTokenObject)
+	_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
+
+	// update the recipe
+	createdRecipe.RecipeName = "updatedRecipe"
+	updatedResponse, _ := updateRecipe(createdRecipe, accessTokenObject.AccessToken)
+
+	// assert the correct status code and body
+	assert.Equal(t, 401, updatedResponse.Code, "Not Found response is expected")
+
+	//cleanup
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
+	deleteUser(defaultNonAdminUser.UserName, recipeAdminToken)
+}
+
+func TestDeleteRecipeWithOtherUser(t *testing.T) {
+	//setUp create a recipe and a user
+	createUser(defaultNonAdminUser, recipeAdminToken)
+	accessTokenObject := models.AccessToken{}
+	userResponse := generateUserToken(defaultNonAdminAuthData)
+	body, _ := ioutil.ReadAll(userResponse.Body)
+	json.Unmarshal(body, &accessTokenObject)
+	_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
+
+	// delete the recipe
+	deleteResponse := deleteRecipe(createdRecipe.RecipeID.Hex(), accessTokenObject.AccessToken)
+
+	// assert the correct status code and body
+	assert.Equal(t, 401, deleteResponse.Code, "Not Found response is expected")
+
+	//cleanup
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
+	deleteUser(defaultNonAdminUser.UserName, recipeAdminToken)
 }
 
 func recipeFieldsAreExpected(t *testing.T, recipe1 models.Recipe, recipe2 models.Recipe) {
