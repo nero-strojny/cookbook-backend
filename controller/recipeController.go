@@ -12,6 +12,61 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func getMongoPage(pageSize int64, idLimit primitive.ObjectID) ([]models.Recipe, error) {
+	var emptyResults []models.Recipe
+	// individually decode mongo results
+	findOptions := options.Find()
+	findOptions.SetLimit(pageSize)
+	filter := bson.M{"_id": bson.M{"$gt": idLimit}}
+	cur, err := RecipeCollection.Find(context.Background(), filter, findOptions)
+	if err != nil {
+		return emptyResults, err
+	}
+	var results []models.Recipe
+	for cur.Next(context.Background()) {
+		result := models.Recipe{}
+		e := cur.Decode(&result)
+		if e != nil {
+			return emptyResults, e
+		}
+		results = append(results, result)
+
+	}
+
+	if err := cur.Err(); err != nil {
+		return emptyResults, err
+	}
+
+	cur.Close(context.Background())
+	return results, nil
+}
+
+// PaginatedRecipes
+func PaginatedRecipes(paginatedRequest models.PaginatedRequest) ([]models.Recipe, error) {
+	// Get the first page
+	var emptyResults []models.Recipe
+	var results []models.Recipe
+	var nextID primitive.ObjectID
+	id, _ := primitive.ObjectIDFromHex("0")
+	firstRecipeBatch, firstBatchErr := getMongoPage(paginatedRequest.PageSize, id)
+	if firstBatchErr != nil {
+		return emptyResults, firstBatchErr
+	}
+	results = firstRecipeBatch
+	nextID = firstRecipeBatch[len(results)-1].RecipeID
+
+	// continue to get a batch of recipes until we reach the page number
+	for i := 1; i < paginatedRequest.PageCount; i++ {
+		newresults, err := getMongoPage(paginatedRequest.PageSize, nextID)
+		if err != nil {
+			return emptyResults, err
+		}
+		results = newresults
+		nextID = newresults[len(results)-1].RecipeID
+	}
+	return results, nil
+}
+
 //GetAllRecipes - gets all recipes
 func GetAllRecipes() ([]models.Recipe, error) {
 	var emptyResults []models.Recipe

@@ -3,9 +3,11 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"server/controller"
 	"server/models"
 	"server/router"
 	"testing"
@@ -170,6 +172,35 @@ func TestGetAll(t *testing.T) {
 	// cleanup
 	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
 	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
+}
+
+func TestPaginatedRecipes(t *testing.T) {
+	// setUp, create some recipes
+	var createdRecipes []models.Recipe
+	for i := 0; i < 10; i++ {
+		defaultRecipe.RecipeName = fmt.Sprint("recipe", i)
+		_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
+		createdRecipes = append(createdRecipes, createdRecipe)
+	}
+
+	var paginatedRequest = models.PaginatedRequest{
+		PageSize:  2,
+		PageCount: 3,
+	}
+
+	// make a getRecipe for the recipe we just created
+	recipes, _ := controller.PaginatedRecipes(paginatedRequest)
+
+	// assert the correct status code and body
+	assert.Equal(t, 2, len(recipes), "Correct Length is expected")
+	assert.Equal(t, "recipe4",	recipes[0].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe5",	recipes[0x.
+	?].RecipeName, "Correct Length is expected")
+
+	// cleanup
+	for i := 0; i < 10; i++ {
+		deleteRecipe(createdRecipes[i].RecipeID.Hex(), recipeAdminToken)
+	}
 }
 
 func TestSearchRecipe(t *testing.T) {
