@@ -85,3 +85,17 @@ type UpdatedPassword struct {
 	CurrentPassword string `json:"currentPassword,omitEmpty"`
 	NewPassword     string `json:"newPassword,omitEmpty"`
 }
+
+// PaginatedRequest
+type PaginatedRecipeRequest struct {
+	PageSize  int64 `json:"pageSize,omitEmpty"`
+	PageCount int   `json:"pageCount,omitEmpty"`
+}
+
+// PaginatedResponse
+type PaginatedRecipeResponse struct {
+	PageSize        int64    `json:"pageSize,omitEmpty"`
+	PageCount       int      `json:"pageCount,omitEmpty"`
+	NumberOfRecipes int64    `json:"numberOfRecipes,omitEmpty"`
+	Recipes         []Recipe `json:"recipes,omitEmpty"`
+}

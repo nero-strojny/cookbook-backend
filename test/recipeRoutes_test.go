@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -30,6 +31,11 @@ var defaultRecipe = models.Recipe{
 	UserName:        "testAdminUser",
 }
 
+var defaultPaginatedRequest = models.PaginatedRecipeRequest{
+	PageCount: 0,
+	PageSize:  10,
+}
+
 func createRecipe(inputRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
 	outputRecipe := models.Recipe{}
 	jsonRecipe, _ := json.Marshal(inputRecipe)
@@ -53,30 +59,31 @@ func getRecipeByID(recipeID string, accessToken string) (*httptest.ResponseRecor
 	return response, recipe
 }
 
-func getAllRecipes(accessToken string) (*httptest.ResponseRecorder, []models.Recipe) {
-	recipes := []models.Recipe{}
-	request, _ := http.NewRequest("GET", "/api/recipes", nil)
+func postPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest, accessToken string) (*httptest.ResponseRecorder, models.PaginatedRecipeResponse) {
+	jsonRequest, _ := json.Marshal(paginatedRequest)
+	paginatedResult := models.PaginatedRecipeResponse{}
+	request, _ := http.NewRequest("POST", "/api/recipes", bytes.NewBuffer(jsonRequest))
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	response := httptest.NewRecorder()
 	recipeRouter.ServeHTTP(response, request)
 	body, _ := ioutil.ReadAll(response.Body)
-	json.Unmarshal(body, &recipes)
-	return response, recipes
+	json.Unmarshal(body, &paginatedResult)
+	return response, paginatedResult
 }
 
-func searchRecipeByName(recipeName string, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
+func searchRecipeByName(recipeName string, accessToken string) (*httptest.ResponseRecorder, []models.Recipe) {
 	var searchRecipe = models.Recipe{
 		RecipeName: recipeName,
 	}
-	recipe := models.Recipe{}
+	recipes := []models.Recipe{}
 	jsonRecipe, _ := json.Marshal(searchRecipe)
 	request, _ := http.NewRequest("POST", "/api/recipe/search", bytes.NewBuffer(jsonRecipe))
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	response := httptest.NewRecorder()
 	recipeRouter.ServeHTTP(response, request)
 	body, _ := ioutil.ReadAll(response.Body)
-	json.Unmarshal(body, &recipe)
-	return response, recipe
+	json.Unmarshal(body, &recipes)
+	return response, recipes
 }
 
 func updateRecipe(inputRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
@@ -160,16 +167,80 @@ func TestGetAll(t *testing.T) {
 	_, createdRecipe2 := createRecipe(defaultRecipe, recipeAdminToken)
 
 	// make a getRecipe for the recipe we just created
-	getResponse, recipes := getAllRecipes(recipeAdminToken)
+	getResponse, paginatedResult := postPaginatedRecipes(defaultPaginatedRequest, recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, getResponse.Code, "OK response is expected")
-	assert.Contains(t, recipes, createdRecipe1, "The first created recipe should be in the results")
-	assert.Contains(t, recipes, createdRecipe2, "The second created recipe should be in the results")
+	assert.Equal(t, int64(2), paginatedResult.NumberOfRecipes, "Correct number of recipes expected")
+	assert.Contains(t, paginatedResult.Recipes, createdRecipe1, "The first created recipe should be in the results")
+	assert.Contains(t, paginatedResult.Recipes, createdRecipe2, "The second created recipe should be in the results")
 
 	// cleanup
 	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
 	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
+}
+
+func TestPaginatedRecipes(t *testing.T) {
+	// setUp, create some recipes
+	var createdRecipes []models.Recipe
+	for i := 0; i < 10; i++ {
+		defaultRecipe.RecipeName = fmt.Sprint("recipe", i)
+		_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
+		createdRecipes = append(createdRecipes, createdRecipe)
+	}
+
+	var paginatedRequest = models.PaginatedRecipeRequest{
+		PageSize:  2,
+		PageCount: 3,
+	}
+
+	// make a getRecipe for the recipe we just created
+	getResponse, paginatedResult := postPaginatedRecipes(paginatedRequest, recipeAdminToken)
+
+	// assert the correct status code and body
+	assert.Equal(t, 200, getResponse.Code, "OK response is expected")
+	assert.Equal(t, 2, len(paginatedResult.Recipes), "Correct Length is expected")
+	assert.Equal(t, int64(10), paginatedResult.NumberOfRecipes, "Correct number of recipes expected")
+	assert.Equal(t, "recipe4", paginatedResult.Recipes[0].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe5", paginatedResult.Recipes[1].RecipeName, "Correct Length is expected")
+
+	// cleanup
+	for i := 0; i < 10; i++ {
+		deleteRecipe(createdRecipes[i].RecipeID.Hex(), recipeAdminToken)
+	}
+}
+
+func TestPaginatedOutOfBoundsRecipes(t *testing.T) {
+	// setUp, create some recipes
+	var createdRecipes []models.Recipe
+	for i := 0; i < 10; i++ {
+		defaultRecipe.RecipeName = fmt.Sprint("recipe", i)
+		_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
+		createdRecipes = append(createdRecipes, createdRecipe)
+	}
+
+	var paginatedRequest = models.PaginatedRecipeRequest{
+		PageSize:  5,
+		PageCount: 3,
+	}
+
+	// make a getRecipe for the recipe we just created
+	getResponse, paginatedResult := postPaginatedRecipes(paginatedRequest, recipeAdminToken)
+
+	// assert the correct status code and body
+	assert.Equal(t, 200, getResponse.Code, "OK response is expected")
+	assert.Equal(t, 5, len(paginatedResult.Recipes), "Correct Length is expected")
+	assert.Equal(t, int64(10), paginatedResult.NumberOfRecipes, "Correct number of recipes expected")
+	assert.Equal(t, "recipe5", paginatedResult.Recipes[0].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe6", paginatedResult.Recipes[1].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe7", paginatedResult.Recipes[2].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe8", paginatedResult.Recipes[3].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe9", paginatedResult.Recipes[4].RecipeName, "Correct Length is expected")
+
+	// cleanup
+	for i := 0; i < 10; i++ {
+		deleteRecipe(createdRecipes[i].RecipeID.Hex(), recipeAdminToken)
+	}
 }
 
 func TestSearchRecipe(t *testing.T) {
@@ -179,14 +250,36 @@ func TestSearchRecipe(t *testing.T) {
 	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	searchResponse, resultRecipe := searchRecipeByName("Specific Recipe Name", recipeAdminToken)
+	searchResponse, resultRecipes := searchRecipeByName("Specific Recipe Name", recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
-	recipeFieldsAreExpected(t, resultRecipe, createdRecipe)
+	recipeFieldsAreExpected(t, resultRecipes[0], createdRecipe)
 
 	// cleanup
 	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
+}
+
+func TestPartialSearchRecipe(t *testing.T) {
+	// set up, create a recipe with a unique name
+	specificNamedRecipe1 := defaultRecipe
+	specificNamedRecipe1.RecipeName = "Specific Recipe Name"
+	_, createdRecipe1 := createRecipe(specificNamedRecipe1, recipeAdminToken)
+	specificNamedRecipe2 := defaultRecipe
+	specificNamedRecipe2.RecipeName = "Another specific recipe name"
+	_, createdRecipe2 := createRecipe(specificNamedRecipe2, recipeAdminToken)
+
+	// make a search for the recipe we just created
+	searchResponse, resultRecipes := searchRecipeByName("specific", recipeAdminToken)
+
+	// assert the correct status code and body
+	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
+	recipeFieldsAreExpected(t, resultRecipes[0], createdRecipe1)
+	recipeFieldsAreExpected(t, resultRecipes[1], createdRecipe2)
+
+	// cleanup
+	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
+	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
 }
 
 func TestUpdateRecipe(t *testing.T) {
@@ -260,7 +353,7 @@ func TestGetAllRecipesWithInvalidToken(t *testing.T) {
 	_, createdRecipe2 := createRecipe(defaultRecipe, recipeAdminToken)
 
 	// make a getRecipe for the recipe we just created
-	getResponse, _ := getAllRecipes("invalidToken")
+	getResponse, _ := postPaginatedRecipes(defaultPaginatedRequest, "invalidToken")
 
 	// assert the correct status code and body
 	assert.Equal(t, 401, getResponse.Code, "Unauthorized response is expected")
