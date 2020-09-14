@@ -41,15 +41,17 @@ func authenticateSpecificUser(response http.ResponseWriter, request *http.Reques
 	return userErr
 }
 
-// GetAllRecipes controller GET request
-func GetAllRecipes(w http.ResponseWriter, r *http.Request) {
+// PostPaginateRecipes controller POST request
+func PostPaginatedRecipes(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	userErr := authenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		payload, err := controller.GetAllRecipes()
+		var paginatedRequest models.PaginatedRecipeRequest
+		_ = json.NewDecoder(r.Body).Decode(&paginatedRequest)
+		payload, err := controller.PostPaginatedRecipes(paginatedRequest)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
@@ -78,8 +80,8 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//GetRecipeByName looks up a recipe by its exact name
-func GetRecipeByName(w http.ResponseWriter, r *http.Request) {
+//SearchRecipes searches for a recipe using the recipename
+func SearchRecipes(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
 	userErr := authenticateUser(w, r, false)
@@ -317,7 +319,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 //SingleRecipeOptions eats options requests
 func SingleRecipeOptions(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT, POST")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("")
 }

@@ -42,7 +42,7 @@ func getMongoPage(pageSize int64, idLimit primitive.ObjectID) ([]models.Recipe, 
 }
 
 // PaginatedRecipes
-func PaginatedRecipes(paginatedRequest models.PaginatedRequest) ([]models.Recipe, error) {
+func PaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) ([]models.Recipe, error) {
 	// Get the first page
 	var emptyResults []models.Recipe
 	var results []models.Recipe
@@ -56,26 +56,64 @@ func PaginatedRecipes(paginatedRequest models.PaginatedRequest) ([]models.Recipe
 	nextID = firstRecipeBatch[len(results)-1].RecipeID
 
 	// continue to get a batch of recipes until we reach the page number
-	for i := 1; i < paginatedRequest.PageCount; i++ {
-		newresults, err := getMongoPage(paginatedRequest.PageSize, nextID)
-		if err != nil {
-			return emptyResults, err
+	if paginatedRequest.PageCount > 0 {
+		for i := 1; i < paginatedRequest.PageCount; i++ {
+			newresults, err := getMongoPage(paginatedRequest.PageSize, nextID)
+			if err != nil {
+				return emptyResults, err
+			}
+			if len(newresults) == 0 {
+				return results, nil
+			}
+			results = newresults
+			nextID = newresults[len(results)-1].RecipeID
 		}
-		results = newresults
-		nextID = newresults[len(results)-1].RecipeID
 	}
 	return results, nil
 }
 
-//GetAllRecipes - gets all recipes
-func GetAllRecipes() ([]models.Recipe, error) {
-	var emptyResults []models.Recipe
-	cur, err := RecipeCollection.Find(context.Background(), bson.D{{}})
+//PostPaginateRecipes - gets all recipes
+func PostPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) (models.PaginatedRecipeResponse, error) {
+	itemCount, err := RecipeCollection.CountDocuments(context.Background(), bson.D{{}})
+	if err != nil {
+		return models.PaginatedRecipeResponse{}, err
+	}
+
+	recipes, getErr := PaginatedRecipes(paginatedRequest)
+
+	if getErr != nil {
+		return models.PaginatedRecipeResponse{}, err
+	}
+
+	return models.PaginatedRecipeResponse{
+		Recipes:         recipes,
+		NumberOfRecipes: itemCount,
+		PageCount:       paginatedRequest.PageCount,
+		PageSize:        paginatedRequest.PageSize,
+	}, nil
+}
+
+//GetRecipe - gets recipes by its ID
+func GetRecipe(recipeID string) (models.Recipe, error) {
+	result := models.Recipe{}
+	id, _ := primitive.ObjectIDFromHex(recipeID)
+	filter := bson.M{"_id": id}
+	err := RecipeCollection.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+//SearchRecipe - searches for a recipe by exact name
+func SearchRecipe(name string) ([]models.Recipe, error) {
+	emptyResults := []models.Recipe{}
+	regex := `(?i).*` + name + `.*`
+	filter := bson.M{"recipename": bson.M{"$regex": regex}}
+	cur, err := RecipeCollection.Find(context.Background(), filter)
 	if err != nil {
 		return emptyResults, err
 	}
-
-	// individually decode mongo results
 	var results []models.Recipe
 	for cur.Next(context.Background()) {
 		result := models.Recipe{}
@@ -93,29 +131,6 @@ func GetAllRecipes() ([]models.Recipe, error) {
 
 	cur.Close(context.Background())
 	return results, nil
-}
-
-//GetRecipe - gets recipes by its ID
-func GetRecipe(recipeID string) (models.Recipe, error) {
-	result := models.Recipe{}
-	id, _ := primitive.ObjectIDFromHex(recipeID)
-	filter := bson.M{"_id": id}
-	err := RecipeCollection.FindOne(context.Background(), filter).Decode(&result)
-	if err != nil {
-		return result, err
-	}
-	return result, nil
-}
-
-//SearchRecipe - searches for a recipe by exact name
-func SearchRecipe(name string) (models.Recipe, error) {
-	result := models.Recipe{}
-	filter := bson.M{"recipename": name}
-	err := RecipeCollection.FindOne(context.Background(), filter).Decode(&result)
-	if err != nil {
-		return result, err
-	}
-	return result, nil
 
 }
 
