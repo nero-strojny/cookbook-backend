@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"server/controller"
 	"server/models"
 	"server/router"
 	"testing"
@@ -241,6 +242,25 @@ func TestPaginatedOutOfBoundsRecipes(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		deleteRecipe(createdRecipes[i].RecipeID.Hex(), recipeAdminToken)
 	}
+}
+
+func TestRandomRecipes(t *testing.T) {
+	// setUp, create some recipes
+	var createdRecipes []models.Recipe
+	for i := 0; i < 20; i++ {
+		defaultRecipe.RecipeName = fmt.Sprint("recipe", i)
+		_, createdRecipe := createRecipe(defaultRecipe, recipeAdminToken)
+		createdRecipes = append(createdRecipes, createdRecipe)
+	}
+
+	randomRecipes, _ := controller.GetRandomRecipes(5)
+	assert.Equal(t, 5, len(randomRecipes), "Inputted Length Expected")
+
+	// cleanup
+	for i := 0; i < 20; i++ {
+		deleteRecipe(createdRecipes[i].RecipeID.Hex(), recipeAdminToken)
+	}
+
 }
 
 func TestSearchRecipe(t *testing.T) {

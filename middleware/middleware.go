@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"server/controller"
@@ -75,6 +76,30 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(payload)
+		}
+	}
+}
+
+// GetRandomRecipes gets a random number of recipes
+func GetRandomRecipes(w http.ResponseWriter, r *http.Request) {
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	userErr := authenticateUser(w, r, false)
+	if userErr != nil {
+		json.NewEncoder(w).Encode(userErr.Error())
+	} else {
+		params := mux.Vars(r)
+		i, convertErr := strconv.Atoi(params["numberOfRecipes"])
+		if convertErr != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			payload, err := controller.GetRandomRecipes(i)
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(payload)
+			}
 		}
 	}
 }

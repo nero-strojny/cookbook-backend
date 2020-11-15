@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"math/rand"
 	"time"
 
 	"server/models"
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// getMongoPage takes the max id and page size to find a selection of recipes
 func getMongoPage(pageSize int64, idLimit primitive.ObjectID) ([]models.Recipe, error) {
 	var emptyResults []models.Recipe
 	// individually decode mongo results
@@ -41,7 +43,7 @@ func getMongoPage(pageSize int64, idLimit primitive.ObjectID) ([]models.Recipe, 
 	return results, nil
 }
 
-// PaginatedRecipes
+// PaginatedRecipes returns all recipes matching a paginated request
 func PaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) ([]models.Recipe, error) {
 	// Get the first page
 	var emptyResults []models.Recipe
@@ -105,6 +107,58 @@ func GetRecipe(recipeID string) (models.Recipe, error) {
 	return result, nil
 }
 
+func contains(recipeNumbers []int, recipeNumber int) bool {
+	for _, num := range recipeNumbers {
+		if num == recipeNumber {
+			return true
+		}
+	}
+	return false
+}
+
+// GetRandomRecipes
+func GetRandomRecipes(numberOfRecipes int) ([]models.Recipe, error) {
+	var emptyResults []models.Recipe
+	itemCount, err := RecipeCollection.CountDocuments(context.Background(), bson.D{{}})
+	if err != nil {
+		return emptyResults, err
+	}
+	if numberOfRecipes > int(itemCount) {
+		numberOfRecipes = int(itemCount)
+	} else if numberOfRecipes < 1 {
+		return emptyResults, err
+	}
+	var seededRand *rand.Rand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
+	var recipeNumbers []int
+	doneComputing := false
+	for !doneComputing {
+		recipeNumber := seededRand.Intn(int(itemCount))
+		if !contains(recipeNumbers, recipeNumber) {
+			recipeNumbers = append(recipeNumbers, recipeNumber)
+			if len(recipeNumbers) == numberOfRecipes {
+				doneComputing = true
+			}
+		}
+	}
+	var randomRecipes []models.Recipe
+	for _, num := range recipeNumbers {
+		pageSize := 10
+		pageCount := num / pageSize
+		selectedRecipe := num % pageSize
+		paginatedRequest := models.PaginatedRecipeRequest{
+			PageCount: pageCount,
+			PageSize:  int64(pageSize),
+		}
+		recipes, getErr := PaginatedRecipes(paginatedRequest)
+		if getErr != nil {
+			return emptyResults, err
+		}
+		randomRecipes = append(randomRecipes, recipes[selectedRecipe])
+	}
+	return randomRecipes, nil
+}
+
 //SearchRecipe - searches for a recipe by exact name
 func SearchRecipe(name string) ([]models.Recipe, error) {
 	emptyResults := []models.Recipe{}
@@ -125,7 +179,7 @@ func SearchRecipe(name string) ([]models.Recipe, error) {
 
 	}
 
-	if err := cur.Err(); err != nil {
+	if err := cur.Err(); err != nil || len(results) == 0 {
 		return emptyResults, err
 	}
 
