@@ -20,6 +20,7 @@
 - scp over the files: `scp -r -i <pem file here> <path to cookbook backend> <ec2 instance>`
 - ssh into the ec2 instance `ssh -i "<pem file here>" <ec2 instance>`
 - start docker if it is not already started: `sudo service docker start`
+- stop old docker container if applicable
 - build the docker container: `docker build -t docker-example .`
 - run the docker container: `docker run --detach --publish 8080:8080 docker-example`
 - follow the logs if needed: `docker logs follow <container id>`

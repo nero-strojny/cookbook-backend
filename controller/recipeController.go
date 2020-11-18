@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"log"
 	"math/rand"
 	"time"
 
@@ -59,7 +60,7 @@ func PaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) ([]models.
 
 	// continue to get a batch of recipes until we reach the page number
 	if paginatedRequest.PageCount > 0 {
-		for i := 1; i < paginatedRequest.PageCount; i++ {
+		for i := 1; i <= paginatedRequest.PageCount; i++ {
 			newresults, err := getMongoPage(paginatedRequest.PageSize, nextID)
 			if err != nil {
 				return emptyResults, err
@@ -142,6 +143,7 @@ func GetRandomRecipes(numberOfRecipes int) ([]models.Recipe, error) {
 		}
 	}
 	var randomRecipes []models.Recipe
+	log.Print(recipeNumbers)
 	for _, num := range recipeNumbers {
 		pageSize := 10
 		pageCount := num / pageSize
