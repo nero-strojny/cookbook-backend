@@ -202,8 +202,8 @@ func TestPaginatedRecipes(t *testing.T) {
 	assert.Equal(t, 200, getResponse.Code, "OK response is expected")
 	assert.Equal(t, 2, len(paginatedResult.Recipes), "Correct Length is expected")
 	assert.Equal(t, int64(10), paginatedResult.NumberOfRecipes, "Correct number of recipes expected")
-	assert.Equal(t, "recipe4", paginatedResult.Recipes[0].RecipeName, "Correct Length is expected")
-	assert.Equal(t, "recipe5", paginatedResult.Recipes[1].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe6", paginatedResult.Recipes[0].RecipeName, "Correct Length is expected")
+	assert.Equal(t, "recipe7", paginatedResult.Recipes[1].RecipeName, "Correct Length is expected")
 
 	// cleanup
 	for i := 0; i < 10; i++ {

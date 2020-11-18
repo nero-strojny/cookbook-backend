@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"log"
 	"math/rand"
 	"time"
 
@@ -143,7 +142,6 @@ func GetRandomRecipes(numberOfRecipes int) ([]models.Recipe, error) {
 		}
 	}
 	var randomRecipes []models.Recipe
-	log.Print(recipeNumbers)
 	for _, num := range recipeNumbers {
 		pageSize := 10
 		pageCount := num / pageSize
