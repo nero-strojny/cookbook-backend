@@ -13,7 +13,6 @@ type Recipe struct {
 	PrepTime        int                `json:"prepTime"`
 	CookTime        int                `json:"cookTime"`
 	Steps           []step             `json:"steps,omitempty"`
-	Rating          int                `json:"rating"`
 	Servings        int                `json:"servings"`
 	Calories        int                `json:"calories"`
 	UserName        string             `json:"userName,omitempty"`

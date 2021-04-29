@@ -24,7 +24,6 @@ var defaultRecipe = models.Recipe{
 	CreatedDate:     "2020.08.16 22:20:53",
 	LastUpdatedDate: "2020.08.16 22:20:53",
 	Author:          "someAuthor",
-	Rating:          5,
 	Servings:        2,
 	Calories:        500,
 	PrepTime:        5,
@@ -454,7 +453,6 @@ func recipeFieldsAreExpected(t *testing.T, recipe1 models.Recipe, recipe2 models
 	assert.NotNilf(t, recipe1.CreatedDate, "CreatedDate should be set")
 	assert.NotNilf(t, recipe1.LastUpdatedDate, "LastUpdatedDate should be set")
 	assert.Equal(t, recipe1.Author, recipe2.Author, "Inputted author value expected")
-	assert.Equal(t, recipe1.Rating, recipe2.Rating, "Inputted rating is expected")
 	assert.Equal(t, recipe1.Servings, recipe2.Servings, "Inputted servings is expected")
 	assert.Equal(t, recipe1.Calories, recipe2.Calories, "Inputted calories is expected")
 	assert.Equal(t, recipe1.RecipeName, recipe2.RecipeName, "Inputted recipe name is expected")
