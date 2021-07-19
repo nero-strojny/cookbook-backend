@@ -29,7 +29,7 @@ func SetClients(dbString string, env string) {
 
 	// If the dBString is empty, then we need to fall back on a file if one is present
 	if dbString == "" {
-		connectionString = util.OpenFile("config.json")
+		connectionString = util.OpenFile("../config.json")
 	} else {
 		connectionString = dbString
 	}
