@@ -1,8 +1,6 @@
 
 # Telling to use Docker's golang ready image
 FROM golang
-# Name and Email of the author 
-MAINTAINER nero.alexandraj@gmail.com
 # Create app folder 
 RUN mkdir /server
 # Copy our file in the host container to our container
