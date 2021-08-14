@@ -25,7 +25,7 @@ var defaultRecipe = models.Recipe{
 	LastUpdatedDate: "2020.08.16 22:20:53",
 	Author:          "someAuthor",
 	Servings:        2,
-	Tags:            []string{"blah"},
+	Tags:            []string{"testTag"},
 	Calories:        500,
 	PrepTime:        5,
 	CookTime:        5,
@@ -72,10 +72,7 @@ func postPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest, access
 	return response, paginatedResult
 }
 
-func searchRecipeByName(recipeName string, accessToken string) (*httptest.ResponseRecorder, []models.Recipe) {
-	var searchRecipe = models.Recipe{
-		RecipeName: recipeName,
-	}
+func queryRecipe(searchRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, []models.Recipe) {
 	recipes := []models.Recipe{}
 	jsonRecipe, _ := json.Marshal(searchRecipe)
 	request, _ := http.NewRequest("POST", "/api/recipe/search", bytes.NewBuffer(jsonRecipe))
@@ -263,14 +260,17 @@ func TestRandomRecipes(t *testing.T) {
 
 }
 
-func TestSearchRecipe(t *testing.T) {
+func TestSearchRecipeByName(t *testing.T) {
 	// set up, create a recipe with a unique name
 	specificNamedRecipe := defaultRecipe
 	specificNamedRecipe.RecipeName = "Specific Recipe Name"
 	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	searchResponse, resultRecipes := searchRecipeByName("Specific Recipe Name", recipeAdminToken)
+	var searchRecipe = models.Recipe{
+		RecipeName: "Specific Recipe Name",
+	}
+	searchResponse, resultRecipes := queryRecipe(searchRecipe, recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
@@ -280,7 +280,26 @@ func TestSearchRecipe(t *testing.T) {
 	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 }
 
-func TestPartialSearchRecipe(t *testing.T) {
+func TestSearchRecipeByTag(t *testing.T) {
+	// set up, create a recipe
+	specificNamedRecipe := defaultRecipe
+	specificNamedRecipe.Tags = []string{"tag1", "tag2"}
+	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
+
+	// make a search for the recipe we just created
+	var searchRecipe = models.Recipe{
+		Tags: []string{"tag1"},
+	}
+	searchResponse, resultRecipes := queryRecipe(searchRecipe, recipeAdminToken)
+	// assert the correct status code and body
+	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
+	recipeFieldsAreExpected(t, resultRecipes[0], createdRecipe)
+
+	// cleanup
+	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
+}
+
+func TestPartialNameSearchRecipe(t *testing.T) {
 	// set up, create a recipe with a unique name
 	specificNamedRecipe1 := defaultRecipe
 	specificNamedRecipe1.RecipeName = "Specific Recipe Name"
@@ -290,7 +309,10 @@ func TestPartialSearchRecipe(t *testing.T) {
 	_, createdRecipe2 := createRecipe(specificNamedRecipe2, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	searchResponse, resultRecipes := searchRecipeByName("specific", recipeAdminToken)
+	var searchRecipe = models.Recipe{
+		RecipeName: "Specific Recipe Name",
+	}
+	searchResponse, resultRecipes := queryRecipe(searchRecipe, recipeAdminToken)
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
@@ -391,7 +413,10 @@ func TestSearchRecipeWithInvalidToken(t *testing.T) {
 	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	searchResponse, _ := searchRecipeByName("Specific Recipe Name", "invalidToken")
+	var searchRecipe = models.Recipe{
+		RecipeName: "Specific Recipe Name",
+	}
+	searchResponse, _ := queryRecipe(searchRecipe, "invalidToken")
 
 	// assert the correct status code and body
 	assert.Equal(t, 401, searchResponse.Code, "Unauthorized response is expected")

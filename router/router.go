@@ -18,21 +18,13 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/recipe/{id}", middleware.UpdateRecipe).Methods("PUT")
 	router.HandleFunc("/api/recipe/{id}", middleware.SingleRecipeOptions).Methods("OPTIONS")
 
-	router.HandleFunc("/api/recipe/search", middleware.SearchRecipes).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/recipe/search", middleware.QueryRecipe).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/api/recipe", middleware.CreateRecipe).Methods("POST")
 	router.HandleFunc("/api/recipe", middleware.CreateRecipeOptions).Methods("OPTIONS")
 
 	router.HandleFunc("/api/randomRecipe/{numberOfRecipes}", middleware.GetRandomRecipes).Methods("GET")
 	router.HandleFunc("/api/randomRecipe/{numberOfRecipes}", middleware.SingleRecipeOptions).Methods("OPTIONS")
-
-	router.HandleFunc("/api/calorieLog/{id}", middleware.GetCalorieLog).Methods("GET")
-	router.HandleFunc("/api/calorieLog/{id}", middleware.DeleteCalorieLog).Methods("DELETE")
-	router.HandleFunc("/api/calorieLog/{id}", middleware.UpdateCalorieLog).Methods("PUT")
-	router.HandleFunc("/api/calorieLog/{id}", middleware.SingleCalorieLogOptions).Methods("OPTIONS")
-
-	router.HandleFunc("/api/calorieLog", middleware.CreateCalorieLog).Methods("POST")
-	router.HandleFunc("/api/calorieLog", middleware.CreateCalorieLogOptions).Methods("OPTIONS")
 
 	router.HandleFunc("/api/user", middleware.CreateUser).Methods("POST")
 	router.HandleFunc("/api/user", middleware.UpdateUserPassword).Methods("PUT")

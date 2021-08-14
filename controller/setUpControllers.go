@@ -20,9 +20,6 @@ var RecipeCollection *mongo.Collection
 // UserCollection mongo db object to connect to the collection housing the user data
 var UserCollection *mongo.Collection
 
-// CalorieLogCollection mongo db object to connect to the collection housing the calorie log data
-var CalorieLogCollection *mongo.Collection
-
 // SetClients connect to mongo db, set up the collections
 func SetClients(dbString string, env string) {
 	var connectionString string
@@ -50,11 +47,9 @@ func SetClients(dbString string, env string) {
 
 	if env == "dev" {
 		RecipeCollection = client.Database(dbName).Collection("testCookbookCollection")
-		CalorieLogCollection = client.Database(dbName).Collection("testCalorieLogCollection")
 		UserCollection = client.Database(dbName).Collection("testUserCollection")
 	} else {
 		RecipeCollection = client.Database(dbName).Collection("cookbookCollection")
-		CalorieLogCollection = client.Database(dbName).Collection("calorieLogCollection")
 		UserCollection = client.Database(dbName).Collection("userCollection")
 
 	}
