@@ -146,35 +146,6 @@ func GetRandomRecipes(numberOfRecipes int) ([]models.Recipe, error) {
 }
 
 //SearchRecipeByName - searches for a recipe by name
-func SearchRecipeByName(name string) ([]models.Recipe, error) {
-	emptyResults := []models.Recipe{}
-	regex := `(?i).*` + name + `.*`
-	filter := bson.M{"recipename": bson.M{"$regex": regex}}
-	cur, err := RecipeCollection.Find(context.Background(), filter)
-	if err != nil {
-		return emptyResults, err
-	}
-	var results []models.Recipe
-	for cur.Next(context.Background()) {
-		result := models.Recipe{}
-		e := cur.Decode(&result)
-		if e != nil {
-			return emptyResults, e
-		}
-		results = append(results, result)
-
-	}
-
-	if err := cur.Err(); err != nil || len(results) == 0 {
-		return emptyResults, err
-	}
-
-	cur.Close(context.Background())
-	return results, nil
-
-}
-
-//SearchRecipeByName - searches for a recipe by name
 func QueryRecipe(recipe models.Recipe) ([]models.Recipe, error) {
 	emptyResults := []models.Recipe{}
 	filterArray := bson.A{}

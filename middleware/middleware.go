@@ -104,8 +104,8 @@ func GetRandomRecipes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//SearchRecipes searches for a recipe using the recipename
-func SearchRecipes(w http.ResponseWriter, r *http.Request) {
+//QueryRecipe searches for a recipe using the recipename
+func QueryRecipe(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
 	userErr := authenticateUser(w, r, false)
