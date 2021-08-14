@@ -33,22 +33,10 @@ type step struct {
 	Text   string `json:"text,omitEmpty"`
 }
 
-// CalorieLog is the object representing a calorie log
-type CalorieLog struct {
-	CalorieLogID primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	EnteredDate  string             `json:"enteredDate,omitempty"`
-	Calories     int                `json:"calories,omitempty"`
-	Description  string             `json:"description,omitempty"`
-	UserName     string             `json:"userName,omitempty"`
-}
-
 // UserData is data pertaining to the user's physical characteristics
 type UserData struct {
-	UserID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	UserName            string             `json:"userName,omitempty"`
-	Height              int                `json:"height,omitEmpty"`
-	Weight              int                `json:"weight,omitEmpty"`
-	MaintenanceCalories int                `json:"maintenanceCalories,omitEmpty"`
+	UserID   primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserName string             `json:"userName,omitempty"`
 }
 
 // User is the data representation of a user

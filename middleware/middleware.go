@@ -114,7 +114,7 @@ func SearchRecipes(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var recipe models.Recipe
 		json.NewDecoder(r.Body).Decode(&recipe)
-		payload, err := controller.SearchRecipe(recipe.RecipeName)
+		payload, err := controller.QueryRecipe(recipe)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
@@ -190,64 +190,6 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.WriteHeader(http.StatusNoContent)
 		}
-	}
-}
-
-// GetCalorieLog by ID controller GET request
-func GetCalorieLog(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	params := mux.Vars(r)
-	payload, err := controller.GetCalorieLog(params["id"])
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(payload)
-	}
-}
-
-// CreateCalorieLog controller POST request
-func CreateCalorieLog(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	var calorieLog models.CalorieLog
-	_ = json.NewDecoder(r.Body).Decode(&calorieLog)
-	payload, err := controller.CreateCalorieLog(calorieLog)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(payload)
-	}
-}
-
-// UpdateCalorieLog controller PUT request
-func UpdateCalorieLog(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "PUT")
-	params := mux.Vars(r)
-	var calorieLog models.CalorieLog
-	json.NewDecoder(r.Body).Decode(&calorieLog)
-	payload, err := controller.UpdateCalorieLog(params["id"], calorieLog)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(payload)
-	}
-}
-
-// DeleteCalorieLog controller DELETE request
-func DeleteCalorieLog(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
-	params := mux.Vars(r)
-	err := controller.DeleteCalorieLog(params["id"])
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-	} else {
-		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -356,22 +298,6 @@ func CreateRecipeOptions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("")
 }
 
-//SingleCalorieLogOptions eats options requests
-func SingleCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("")
-}
-
-//CreateCalorieLogOptions handles preflight CORS for creating a calorie log
-func CreateCalorieLogOptions(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("")
-}
-
 //SingleUserOptions eats options requests
 func SingleUserOptions(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
@@ -380,7 +306,7 @@ func SingleUserOptions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("")
 }
 
-//GenerateUserTokenOptions handles preflight CORS for creating a calorie log
+//GenerateUserTokenOptions handles preflight CORS
 func GenerateUserTokenOptions(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET")

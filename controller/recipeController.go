@@ -10,6 +10,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -24,23 +25,8 @@ func getMongoPage(pageSize int64, idLimit primitive.ObjectID) ([]models.Recipe, 
 	if err != nil {
 		return emptyResults, err
 	}
-	var results []models.Recipe
-	for cur.Next(context.Background()) {
-		result := models.Recipe{}
-		e := cur.Decode(&result)
-		if e != nil {
-			return emptyResults, e
-		}
-		results = append(results, result)
 
-	}
-
-	if err := cur.Err(); err != nil {
-		return emptyResults, err
-	}
-
-	cur.Close(context.Background())
-	return results, nil
+	return decodeCurToRecipes(cur)
 }
 
 // PaginatedRecipes returns all recipes matching a paginated request
@@ -159,8 +145,8 @@ func GetRandomRecipes(numberOfRecipes int) ([]models.Recipe, error) {
 	return randomRecipes, nil
 }
 
-//SearchRecipe - searches for a recipe by exact name
-func SearchRecipe(name string) ([]models.Recipe, error) {
+//SearchRecipeByName - searches for a recipe by name
+func SearchRecipeByName(name string) ([]models.Recipe, error) {
 	emptyResults := []models.Recipe{}
 	regex := `(?i).*` + name + `.*`
 	filter := bson.M{"recipename": bson.M{"$regex": regex}}
@@ -186,6 +172,28 @@ func SearchRecipe(name string) ([]models.Recipe, error) {
 	cur.Close(context.Background())
 	return results, nil
 
+}
+
+//SearchRecipeByName - searches for a recipe by name
+func QueryRecipe(recipe models.Recipe) ([]models.Recipe, error) {
+	emptyResults := []models.Recipe{}
+	filterArray := bson.A{}
+	if recipe.RecipeName != "" {
+		regex := `(?i).*` + recipe.RecipeName + `.*`
+		nameFilter := bson.M{"recipename": bson.M{"$regex": regex}}
+		filterArray = append(filterArray, nameFilter)
+	}
+	if len(recipe.Tags) > 0 {
+		tagFilter := bson.M{"tags": bson.M{"$all": recipe.Tags}}
+		filterArray = append(filterArray, tagFilter)
+	}
+	cur, err := RecipeCollection.Find(
+		context.Background(),
+		bson.M{"$and": filterArray})
+	if err != nil {
+		return emptyResults, err
+	}
+	return decodeCurToRecipes(cur)
 }
 
 //DeleteRecipe - deletes a recipe by its ID.
@@ -252,4 +260,25 @@ func isValidRecipe(recipe models.Recipe) (valid bool, invalidFields []string) {
 	}
 	return true, invalidFields
 
+}
+
+func decodeCurToRecipes(cur *mongo.Cursor) ([]models.Recipe, error) {
+	emptyResults := []models.Recipe{}
+	var results []models.Recipe
+	for cur.Next(context.Background()) {
+		result := models.Recipe{}
+		e := cur.Decode(&result)
+		if e != nil {
+			return emptyResults, e
+		}
+		results = append(results, result)
+
+	}
+
+	if err := cur.Err(); err != nil || len(results) == 0 {
+		return emptyResults, err
+	}
+
+	cur.Close(context.Background())
+	return results, nil
 }
