@@ -33,8 +33,9 @@ var defaultRecipe = models.Recipe{
 }
 
 var defaultPaginatedRequest = models.PaginatedRecipeRequest{
-	PageCount: 0,
-	PageSize:  10,
+	PageCount:   0,
+	PageSize:    10,
+	QueryRecipe: models.Recipe{},
 }
 
 func createRecipe(inputRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
@@ -267,10 +268,16 @@ func TestSearchRecipeByName(t *testing.T) {
 	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	var searchRecipe = models.Recipe{
-		RecipeName: "Specific Recipe Name",
+	var paginatedRequest = models.PaginatedRecipeRequest{
+		PageSize:  10,
+		PageCount: 0,
+		QueryRecipe: models.Recipe{
+			RecipeName: "Specific Recipe Name",
+		},
 	}
-	searchResponse, resultRecipes := queryRecipe(searchRecipe, recipeAdminToken)
+	searchResponse, paginatedResult := postPaginatedRecipes(paginatedRequest, recipeAdminToken)
+
+	resultRecipes := paginatedResult.Recipes
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
@@ -287,10 +294,16 @@ func TestSearchRecipeByTag(t *testing.T) {
 	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	var searchRecipe = models.Recipe{
-		Tags: []string{"tag1"},
+	var paginatedRequest = models.PaginatedRecipeRequest{
+		PageSize:  10,
+		PageCount: 0,
+		QueryRecipe: models.Recipe{
+			Tags: []string{"tag1"},
+		},
 	}
-	searchResponse, resultRecipes := queryRecipe(searchRecipe, recipeAdminToken)
+	searchResponse, paginatedResult := postPaginatedRecipes(paginatedRequest, recipeAdminToken)
+
+	resultRecipes := paginatedResult.Recipes
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
 	recipeFieldsAreExpected(t, resultRecipes[0], createdRecipe)
@@ -309,10 +322,16 @@ func TestPartialNameSearchRecipe(t *testing.T) {
 	_, createdRecipe2 := createRecipe(specificNamedRecipe2, recipeAdminToken)
 
 	// make a search for the recipe we just created
-	var searchRecipe = models.Recipe{
-		RecipeName: "Specific Recipe Name",
+	var paginatedRequest = models.PaginatedRecipeRequest{
+		PageSize:  10,
+		PageCount: 0,
+		QueryRecipe: models.Recipe{
+			RecipeName: "Specific Recipe Name",
+		},
 	}
-	searchResponse, resultRecipes := queryRecipe(searchRecipe, recipeAdminToken)
+	searchResponse, paginatedResult := postPaginatedRecipes(paginatedRequest, recipeAdminToken)
+
+	resultRecipes := paginatedResult.Recipes
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
@@ -403,26 +422,6 @@ func TestGetAllRecipesWithInvalidToken(t *testing.T) {
 	// cleanup
 	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
 	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
-
-}
-
-func TestSearchRecipeWithInvalidToken(t *testing.T) {
-	// set up, create a recipe with a unique name
-	specificNamedRecipe := defaultRecipe
-	specificNamedRecipe.RecipeName = "Specific Recipe Name"
-	_, createdRecipe := createRecipe(specificNamedRecipe, recipeAdminToken)
-
-	// make a search for the recipe we just created
-	var searchRecipe = models.Recipe{
-		RecipeName: "Specific Recipe Name",
-	}
-	searchResponse, _ := queryRecipe(searchRecipe, "invalidToken")
-
-	// assert the correct status code and body
-	assert.Equal(t, 401, searchResponse.Code, "Unauthorized response is expected")
-
-	// cleanup
-	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 
 }
 

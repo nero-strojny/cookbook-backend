@@ -76,8 +76,9 @@ type UpdatedPassword struct {
 
 // PaginatedRequest
 type PaginatedRecipeRequest struct {
-	PageSize  int64 `json:"pageSize,omitEmpty"`
-	PageCount int   `json:"pageCount,omitEmpty"`
+	PageSize    int64  `json:"pageSize,omitEmpty"`
+	PageCount   int    `json:"pageCount,omitEmpty"`
+	QueryRecipe Recipe `json:"queryRecipe,omitEmpty"`
 }
 
 // PaginatedResponse
