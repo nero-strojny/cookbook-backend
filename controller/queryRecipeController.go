@@ -72,19 +72,46 @@ func PaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) ([]models.
 
 //PostPaginateRecipes - gets all recipes
 func PostPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) (models.PaginatedRecipeResponse, error) {
-	itemCount, err := RecipeCollection.CountDocuments(context.Background(), bson.D{{}})
-	if err != nil {
-		return models.PaginatedRecipeResponse{}, err
+	filterArray := bson.A{}
+	queryRecipe := paginatedRequest.QueryRecipe
+	var itemNumber int64
+	var countErr error
+	if queryRecipe.RecipeName != "" {
+		regex := `(?i).*` + queryRecipe.RecipeName + `.*`
+		nameFilter := bson.M{"recipename": bson.M{"$regex": regex}}
+		filterArray = append(filterArray, nameFilter)
+	}
+	if len(queryRecipe.Tags) > 0 {
+		tagFilter := bson.M{"tags": bson.M{"$all": queryRecipe.Tags}}
+		filterArray = append(filterArray, tagFilter)
+	}
+	if len(filterArray) > 0 {
+		itemCount, err := RecipeCollection.CountDocuments(
+			context.Background(),
+			bson.M{"$and": filterArray},
+		)
+		itemNumber = itemCount
+		countErr = err
+	} else {
+		itemCount, err := RecipeCollection.CountDocuments(
+			context.Background(),
+			bson.D{{}},
+		)
+		itemNumber = itemCount
+		countErr = err
+	}
+	if countErr != nil {
+		return models.PaginatedRecipeResponse{}, countErr
 	}
 	recipes, getErr := PaginatedRecipes(paginatedRequest)
 
 	if getErr != nil {
-		return models.PaginatedRecipeResponse{}, err
+		return models.PaginatedRecipeResponse{}, getErr
 	}
 
 	return models.PaginatedRecipeResponse{
 		Recipes:         recipes,
-		NumberOfRecipes: itemCount,
+		NumberOfRecipes: itemNumber,
 		PageCount:       paginatedRequest.PageCount,
 		PageSize:        paginatedRequest.PageSize,
 	}, nil
