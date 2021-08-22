@@ -300,6 +300,37 @@ func TestSearchRecipeByTag(t *testing.T) {
 	deleteRecipe(createdRecipe.RecipeID.Hex(), recipeAdminToken)
 }
 
+func TestNoFoundSearchRecipe(t *testing.T) {
+	// set up, create a recipe with a unique name
+	specificNamedRecipe1 := defaultRecipe
+	specificNamedRecipe1.RecipeName = "Specific Recipe Name"
+	_, createdRecipe1 := createRecipe(specificNamedRecipe1, recipeAdminToken)
+	specificNamedRecipe2 := defaultRecipe
+	specificNamedRecipe2.RecipeName = "Another specific recipe name"
+	_, createdRecipe2 := createRecipe(specificNamedRecipe2, recipeAdminToken)
+
+	// make a search that will not return anything
+	var paginatedRequest = models.PaginatedRecipeRequest{
+		PageSize:  10,
+		PageCount: 0,
+		QueryRecipe: models.Recipe{
+			RecipeName: "Something else",
+		},
+	}
+
+	searchResponse, paginatedResult := postPaginatedRecipes(paginatedRequest, recipeAdminToken)
+	resultRecipes := paginatedResult.Recipes
+
+	// assert the correct status code and body
+	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
+	assert.Equal(t, int64(0), paginatedResult.NumberOfRecipes, "Correct number of recipes expected")
+	assert.Equal(t, 0, len(resultRecipes))
+
+	// cleanup
+	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
+	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
+}
+
 func TestPartialNameSearchRecipe(t *testing.T) {
 	// set up, create a recipe with a unique name
 	specificNamedRecipe1 := defaultRecipe
@@ -310,7 +341,7 @@ func TestPartialNameSearchRecipe(t *testing.T) {
 	_, createdRecipe2 := createRecipe(specificNamedRecipe2, recipeAdminToken)
 	specificNamedRecipe3 := defaultRecipe
 	specificNamedRecipe3.RecipeName = "Mismatching name"
-	createRecipe(specificNamedRecipe3, recipeAdminToken)
+	_, createdRecipe3 := createRecipe(specificNamedRecipe3, recipeAdminToken)
 
 	// make a search for the recipe we just created
 	var paginatedRequest = models.PaginatedRecipeRequest{
@@ -333,6 +364,7 @@ func TestPartialNameSearchRecipe(t *testing.T) {
 	// cleanup
 	deleteRecipe(createdRecipe1.RecipeID.Hex(), recipeAdminToken)
 	deleteRecipe(createdRecipe2.RecipeID.Hex(), recipeAdminToken)
+	deleteRecipe(createdRecipe3.RecipeID.Hex(), recipeAdminToken)
 }
 
 func TestUpdateRecipe(t *testing.T) {

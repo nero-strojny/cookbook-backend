@@ -103,6 +103,14 @@ func PostPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) (model
 	if countErr != nil {
 		return models.PaginatedRecipeResponse{}, countErr
 	}
+	if itemNumber == int64(0) {
+		return models.PaginatedRecipeResponse{
+			Recipes:         []models.Recipe{},
+			NumberOfRecipes: itemNumber,
+			PageCount:       paginatedRequest.PageCount,
+			PageSize:        paginatedRequest.PageSize,
+		}, nil
+	}
 	recipes, getErr := PaginatedRecipes(paginatedRequest)
 
 	if getErr != nil {
