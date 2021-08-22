@@ -73,18 +73,6 @@ func postPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest, access
 	return response, paginatedResult
 }
 
-func queryRecipe(searchRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, []models.Recipe) {
-	recipes := []models.Recipe{}
-	jsonRecipe, _ := json.Marshal(searchRecipe)
-	request, _ := http.NewRequest("POST", "/api/recipe/search", bytes.NewBuffer(jsonRecipe))
-	request.Header.Set("Authorization", "Bearer "+accessToken)
-	response := httptest.NewRecorder()
-	recipeRouter.ServeHTTP(response, request)
-	body, _ := ioutil.ReadAll(response.Body)
-	json.Unmarshal(body, &recipes)
-	return response, recipes
-}
-
 func updateRecipe(inputRecipe models.Recipe, accessToken string) (*httptest.ResponseRecorder, models.Recipe) {
 	outputRecipe := models.Recipe{}
 	jsonRecipe, _ := json.Marshal(inputRecipe)
@@ -320,6 +308,9 @@ func TestPartialNameSearchRecipe(t *testing.T) {
 	specificNamedRecipe2 := defaultRecipe
 	specificNamedRecipe2.RecipeName = "Another specific recipe name"
 	_, createdRecipe2 := createRecipe(specificNamedRecipe2, recipeAdminToken)
+	specificNamedRecipe3 := defaultRecipe
+	specificNamedRecipe3.RecipeName = "Mismatching name"
+	createRecipe(specificNamedRecipe3, recipeAdminToken)
 
 	// make a search for the recipe we just created
 	var paginatedRequest = models.PaginatedRecipeRequest{
@@ -335,6 +326,7 @@ func TestPartialNameSearchRecipe(t *testing.T) {
 
 	// assert the correct status code and body
 	assert.Equal(t, 200, searchResponse.Code, "OK response is expected")
+	assert.Equal(t, int64(2), paginatedResult.NumberOfRecipes, "Correct number of recipes expected")
 	recipeFieldsAreExpected(t, resultRecipes[0], createdRecipe1)
 	recipeFieldsAreExpected(t, resultRecipes[1], createdRecipe2)
 
