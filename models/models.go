@@ -8,7 +8,7 @@ type Recipe struct {
 	RecipeName      string             `json:"recipeName,omitempty"`
 	CreatedDate     string             `json:"createdDate,omitempty"`
 	LastUpdatedDate string             `json:"lastUpdatedDate,omitempty"`
-	Ingredients     []ingredient       `json:"ingredients,omitempty"`
+	Ingredients     []Ingredient       `json:"ingredients,omitempty"`
 	Author          string             `json:"author,omitempty"`
 	PrepTime        int                `json:"prepTime"`
 	CookTime        int                `json:"cookTime"`
@@ -21,10 +21,11 @@ type Recipe struct {
 }
 
 // Ingredient is a component of a recipe consisting of the name, amount, and the measurement for that amount (cups, tbsp, lbs, etc)
-type ingredient struct {
-	Name        string  `json:"name,omitempty"`
-	Amount      float32 `json:"amount,omitempty"`
-	Measurement string  `json:"measurement,omitempty"`
+type Ingredient struct {
+	IngredientID primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name         string             `json:"name,omitempty"`
+	Amount       float32            `json:"amount,omitempty"`
+	Measurement  string             `json:"measurement,omitempty"`
 }
 
 // Step is what to do in order for a recipe
