@@ -148,7 +148,7 @@ func TestGetRecipeWithUnknownRecipe(t *testing.T) {
 	assert.Equal(t, 404, getResponse.Code, "Not Found response is expected")
 }
 
-func TestGetAll(t *testing.T) {
+func TestGetAlRecipes(t *testing.T) {
 	// setUp, create some recipes
 	_, createdRecipe1 := createRecipe(defaultRecipe, recipeAdminToken)
 	_, createdRecipe2 := createRecipe(defaultRecipe, recipeAdminToken)
@@ -509,5 +509,4 @@ func recipeFieldsAreExpected(t *testing.T, recipe1 models.Recipe, recipe2 models
 	assert.Equal(t, recipe1.Ingredients, recipe2.Ingredients, "Inputted ingredients are expected")
 	assert.Equal(t, recipe1.Steps, recipe2.Steps, "Inputted steps are expected")
 	assert.Equal(t, recipe1.Private, recipe2.Private, "Inputted private setting is expected")
-
 }

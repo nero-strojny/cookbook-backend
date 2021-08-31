@@ -11,13 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func writeCommonHeaders(w http.ResponseWriter) {
-	acceptedHeaders := "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, X-CSRF-Token"
-	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", acceptedHeaders)
-}
-
 // PostPaginateRecipes controller POST request
 func PostPaginatedRecipes(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
@@ -148,20 +141,4 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
-}
-
-//SingleRecipeOptions eats options requests
-func SingleRecipeOptions(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT, POST")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("")
-}
-
-//CreateRecipeOptions handles preflight CORS for creating a recipe
-func CreateRecipeOptions(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("")
 }

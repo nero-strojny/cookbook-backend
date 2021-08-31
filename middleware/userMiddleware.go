@@ -121,19 +121,3 @@ func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(accessTokenObject)
 	}
 }
-
-//SingleUserOptions eats options requests
-func SingleUserOptions(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "PUT")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("")
-}
-
-//GenerateUserTokenOptions handles preflight CORS
-func GenerateUserTokenOptions(w http.ResponseWriter, r *http.Request) {
-	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("")
-}
