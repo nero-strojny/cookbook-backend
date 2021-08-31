@@ -23,8 +23,10 @@ func GetIngredient(ingredientID string) (models.Ingredient, error) {
 	return result, nil
 }
 
-// QueryIngredient finds a selection of ingredients
-func QueryIngredientDataBase(prefixIngredient string) ([]models.Ingredient, error) {
+// QueryIngredient returns all ingredients matching a prefix
+func QueryIngredient(prefixIngredient string) ([]models.Ingredient, error) {
+	// Get the first page
+	var emptyResults []models.Ingredient
 	var emptyIngredients []models.Ingredient
 	pageSize := int64(5)
 	regex := `(?i)^` + prefixIngredient
@@ -39,14 +41,7 @@ func QueryIngredientDataBase(prefixIngredient string) ([]models.Ingredient, erro
 		return emptyIngredients, err
 	}
 
-	return decodeCurToIngredients(cur)
-}
-
-// PaginatedRecipes returns all recipes matching a paginated request
-func QueryIngredient(prefixIngredient string) ([]models.Ingredient, error) {
-	// Get the first page
-	var emptyResults []models.Ingredient
-	ingredientBatch, batchErr := QueryIngredientDataBase(prefixIngredient)
+	ingredientBatch, batchErr := decodeCurToIngredients(cur)
 	if batchErr != nil {
 		return emptyResults, batchErr
 	}
