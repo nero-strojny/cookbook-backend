@@ -45,7 +45,7 @@ func getIngredientByID(IngredientID string, accessToken string) (*httptest.Respo
 
 func queryIngredients(prefixIngredient string, accessToken string) (*httptest.ResponseRecorder, []models.Ingredient) {
 	ingredientsResult := []models.Ingredient{}
-	request, _ := http.NewRequest("POST", "/api/ingredients?prefixIngredient="+prefixIngredient, nil)
+	request, _ := http.NewRequest("GET", "/api/ingredients?prefixIngredient="+prefixIngredient, nil)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	response := httptest.NewRecorder()
 	ingredientRouter.ServeHTTP(response, request)

@@ -27,7 +27,7 @@ func Router() *mux.Router {
 
 	router.HandleFunc("/api/ingredients", middleware.QueryIngredient).Queries(
 		"prefixIngredient", "{prefixIngredient}",
-	).Methods("POST")
+	).Methods("GET")
 	router.HandleFunc("/api/ingredients", middleware.Options).Queries(
 		"prefixIngredient", "{prefixIngredient}",
 	).Methods("OPTIONS")

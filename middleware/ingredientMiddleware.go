@@ -52,7 +52,7 @@ func GetIngredient(w http.ResponseWriter, r *http.Request) {
 // QueryIngredient controller POST request
 func QueryIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
 	userErr := authenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
