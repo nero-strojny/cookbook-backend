@@ -148,7 +148,7 @@ func TestGetRecipeWithUnknownRecipe(t *testing.T) {
 	assert.Equal(t, 404, getResponse.Code, "Not Found response is expected")
 }
 
-func TestGetAlRecipes(t *testing.T) {
+func TestGetAllRecipes(t *testing.T) {
 	// setUp, create some recipes
 	_, createdRecipe1 := createRecipe(defaultRecipe, recipeAdminToken)
 	_, createdRecipe2 := createRecipe(defaultRecipe, recipeAdminToken)
