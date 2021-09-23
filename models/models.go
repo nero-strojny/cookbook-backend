@@ -26,6 +26,7 @@ type Ingredient struct {
 	Name         string             `json:"name,omitempty"`
 	Amount       float32            `json:"amount,omitempty"`
 	Measurement  string             `json:"measurement,omitempty"`
+	Category     string             `json:"category,omitempty"`
 }
 
 // Step is what to do in order for a recipe
