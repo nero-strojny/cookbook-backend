@@ -90,3 +90,16 @@ type PaginatedRecipeResponse struct {
 	NumberOfRecipes int64    `json:"numberOfRecipes,omitEmpty"`
 	Recipes         []Recipe `json:"recipes,omitEmpty"`
 }
+
+type Basket struct {
+	Produce []string `json:"produce,omitEmpty"`
+	Protein []string `json:"protein,omitEmpty"`
+	Pantry  []string `json:"pantry,omitEmpty"`
+	Dairy   []string `json:"dairy,omitEmpty"`
+	Alcohol []string `json:"alcohol,omitEmpty"`
+}
+
+type Config struct {
+	ConnectionString string `json:"connectionString"`
+	EmailPassword    string `json:"emailPassword"`
+}

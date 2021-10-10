@@ -51,5 +51,8 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/userToken", middleware.GenerateUserToken).Methods("POST")
 	router.HandleFunc("/api/userToken", middleware.Options).Methods("OPTIONS")
 
+	router.HandleFunc("/api/basket", middleware.EmailUser).Methods("POST")
+	router.HandleFunc("/api/basket", middleware.Options).Methods("OPTIONS")
+
 	return router
 }
