@@ -2,12 +2,14 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"log"
-	"server/util"
-
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"io/ioutil"
+	"log"
+	"os"
+	"server/models"
 )
 
 var client *mongo.Client
@@ -23,13 +25,20 @@ var UserCollection *mongo.Collection
 // UserCollection mongo db object to connect to the collection housing the user data
 var IngredientCollection *mongo.Collection
 
+var Config models.Config
+
 // SetClients connect to mongo db, set up the collections
 func SetClients(dbString string, env string) {
 	var connectionString string
 
 	// If the dBString is empty, then we need to fall back on a file if one is present
 	if dbString == "" {
-		connectionString = util.OpenFile("../config.json")
+		jsonFile, _ := os.Open("../config.json")
+		defer jsonFile.Close()
+
+		jsonData, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(jsonData, &Config)
+		connectionString = Config.ConnectionString
 	} else {
 		connectionString = dbString
 	}

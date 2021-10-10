@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -119,5 +120,22 @@ func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 	} else {
 		accessTokenObject.AccessToken = token
 		json.NewEncoder(w).Encode(accessTokenObject)
+	}
+}
+
+func EmailUser(w http.ResponseWriter, r *http.Request) {
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	
+	var basket models.Basket
+	_ = json.NewDecoder(r.Body).Decode(&basket)
+	err := controller.SendEmail(basket)
+
+	if err != nil {
+		fmt.Println("Error Sending Email")
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
 	}
 }
