@@ -1,42 +1,34 @@
 package controller
 
 import (
-	"net/smtp"
+	"server/email"
 	"server/models"
 )
 
+const (
+	mime    = "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+	subject = "Subject: Grocery List\r\n\r\n"
+)
+
 func SendEmail(basket models.Basket) error {
-	from := "tasty.boi.shopping.list@gmail.com"
-	pass := Config.EmailPassword
-	
-	to := []string{"jakestrojny@gmail.com"}
-
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-
-
-	shoppingList := "Subject: Grocery List  \r\n\r\n"
-	shoppingList += buildCategoryString("Produce", basket.Produce)
+	shoppingList := buildCategoryString("Produce", basket.Produce)
 	shoppingList += buildCategoryString("Pantry", basket.Pantry)
 	shoppingList += buildCategoryString("Protein", basket.Protein)
 	shoppingList += buildCategoryString("Dairy", basket.Dairy)
 	shoppingList += buildCategoryString("Alcohol", basket.Alcohol)
-
-	message := []byte(shoppingList)
-
-	auth := smtp.PlainAuth("", from, pass, smtpHost)
-
-	return smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+	to := []string{"jakestrojny@gmail.com"}
+	return email.Send(subject, mime, shoppingList, to)
 }
 
 func buildCategoryString(category string, ingredients []string) string {
 	if len(ingredients) == 0 {
 		return ""
 	}
-	output := "\n" + category + "\n"
+	output := "<b>" + category + "</b>" + "\n"
+	output += "<ul>"
 	for _, ingredient := range ingredients {
-		output += ingredient +"\n"
+		output += "<li>" + ingredient + "</lu>" + "\n"
 	}
-
+	output += "</ul>"
 	return output
 }
