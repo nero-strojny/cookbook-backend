@@ -124,12 +124,13 @@ func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func EmailUser(w http.ResponseWriter, r *http.Request) {
+	bearerToken := strings.ReplaceAll(r.Header.Get("Authorization"), "Bearer ", "")
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	
+
 	var basket models.Basket
 	_ = json.NewDecoder(r.Body).Decode(&basket)
-	err := controller.SendEmail(basket)
+	err := controller.SendEmail(basket, bearerToken)
 
 	if err != nil {
 		fmt.Println("Error Sending Email")
