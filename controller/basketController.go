@@ -18,6 +18,7 @@ func SendEmail(basket models.Basket, token string) error {
 	shoppingList += buildCategoryString("Dairy", basket.Dairy)
 	shoppingList += buildCategoryString("Alcohol", basket.Alcohol)
 	userEmail, err := lookUpUserEmail(token)
+
 	if err != nil {
 		return err
 	}

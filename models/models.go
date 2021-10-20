@@ -93,11 +93,12 @@ type PaginatedRecipeResponse struct {
 }
 
 type Basket struct {
-	Produce []string `json:"produce,omitEmpty"`
-	Protein []string `json:"protein,omitEmpty"`
-	Pantry  []string `json:"pantry,omitEmpty"`
-	Dairy   []string `json:"dairy,omitEmpty"`
-	Alcohol []string `json:"alcohol,omitEmpty"`
+	Produce  []string `json:"produce,omitEmpty"`
+	Protein  []string `json:"protein,omitEmpty"`
+	Pantry   []string `json:"pantry,omitEmpty"`
+	Dairy    []string `json:"dairy,omitEmpty"`
+	Alcohol  []string `json:"alcohol,omitEmpty"`
+	UserName string   `json:"userName"`
 }
 
 type Config struct {
