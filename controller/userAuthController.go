@@ -151,7 +151,8 @@ func GenerateUserToken(authData models.AuthData) (string, error) {
 	}
 
 	updateFilter := bson.M{"_id": result.UserID}
-	updateResult, updateErr := UserCollection.ReplaceOne(context.Background(), updateFilter, result)
+	setOperation := bson.D{{"$set", bson.D{{"accesstoken", result.AccessToken}, {"expirydate", result.ExpiryDate}}}}
+	updateResult, updateErr := UserCollection.UpdateOne(context.Background(), updateFilter, setOperation)
 
 	if hashErr != nil {
 		return "", errors.New("failed authentication, unknown user or password")
