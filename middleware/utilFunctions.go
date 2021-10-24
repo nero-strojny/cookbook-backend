@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
+	"server/controller"
 )
 
 func writeCommonHeaders(w http.ResponseWriter) {
@@ -18,4 +19,10 @@ func Options(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET, DELETE, PUT, POST")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("")
+}
+
+func HealthCheck(w http.ResponseWriter, r *http.Request) {
+	writeCommonHeaders(w)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(controller.HealthCheck())
 }

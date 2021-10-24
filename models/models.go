@@ -104,3 +104,7 @@ type Config struct {
 	ConnectionString string `json:"connectionString"`
 	EmailPassword    string `json:"emailPassword"`
 }
+
+type HealthStatus struct {
+	DB string `json:"database"`
+}

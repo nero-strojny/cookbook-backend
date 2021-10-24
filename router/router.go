@@ -54,5 +54,8 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/basket", middleware.EmailUser).Methods("POST")
 	router.HandleFunc("/api/basket", middleware.Options).Methods("OPTIONS")
 
+	router.HandleFunc("/api/health", middleware.HealthCheck).Methods("GET")
+	router.HandleFunc("/api/health", middleware.HealthCheck).Methods("OPTIONS")
+
 	return router
 }
