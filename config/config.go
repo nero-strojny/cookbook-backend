@@ -19,7 +19,7 @@ var (
 
 func GetConfig() Config {
 	once.Do(func() {
-		jsonFile, _ := os.Open("../config.json")
+		jsonFile, _ := os.Open("./config.json")
 		defer jsonFile.Close()
 
 		jsonData, _ := ioutil.ReadAll(jsonFile)
