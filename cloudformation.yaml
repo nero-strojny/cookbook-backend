@@ -1,0 +1,386 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  packageName:
+    Type: String
+    Description: The name of the package (ie. order-request)
+  version:
+    Type: String
+    Description: The service version.
+  hostedZoneCertificateArn:
+    Type: String
+    Description: The hosted zone certificate ARN.
+  memory:
+    Type: Number
+    Description: The amount of memory in MB.
+  cpu:
+    Type: Number
+    Description: The number of vCPU units.
+  minimumCount:
+    Type: Number
+    Description: The minimum count of running tasks.
+    Default: "1"
+  maximumCount:
+    Type: Number
+    Description: The maximum count of running tasks.
+  loadBalancerRulePriority:
+    Type: String
+    Default: "50000"
+    Description: The priority of the load balancer rule.
+  port:
+    Type: Number
+    Default: 8080
+    Description: The port the application runs on.
+Mappings:
+  RegionMap:
+    us-east-1:
+      vpc: vpc-5042b52d
+      publicSubnets:
+        - subnet-909842f6
+        - subnet-f513fdc4
+        - subnet-c6802799
+        - subnet-5e553f13
+        - subnet-c47ddce5
+        - subnet-d48915da
+Resources:
+  loadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription:
+        Fn::Join:
+          - " "
+          - - "Allows access to"
+            - !Ref "packageName"
+            - "Load Balancer"
+      VpcId:
+        Fn::FindInMap:
+          - RegionMap
+          - Ref: AWS::Region
+          - vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Service
+          Value: !Ref packageName
+  loadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name:
+        Fn::Join:
+          - "-"
+          - - !Ref packageName
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "25"
+      Subnets:
+        Fn::FindInMap:
+          - RegionMap
+          - Ref: AWS::Region
+          - publicSubnets
+      SecurityGroups:
+        - !Ref loadBalancerSecurityGroup
+      Tags:
+        - Key: Service
+          Value: !Ref packageName
+  loadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - loadBalancer
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref targetGroup
+      LoadBalancerArn: !Ref "loadBalancer"
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref hostedZoneCertificateArn
+  targetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 5
+      HealthCheckPath: "/api/health"
+      TargetType: ip
+      Port: !Ref port
+      Protocol: HTTP
+      VpcId:
+        Fn::FindInMap:
+          - RegionMap
+          - Ref: AWS::Region
+          - vpc
+  ecsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName:
+        Fn::Join:
+          - "-"
+          - - !Ref packageName
+            - cluster
+  ecsTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ServiceTaskPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+  ecsTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ServiceTaskExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  # - ssm:GetParameters
+                  - secretsmanager:GetSecretValue
+                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+  fargateContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription:
+        Fn::Join:
+          - " "
+          - - Allows access to
+            - !Ref packageName
+            - Fargate container
+      VpcId:
+        Fn::FindInMap:
+          - RegionMap
+          - Ref: AWS::Region
+          - vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref port
+          ToPort: !Ref port
+          SourceSecurityGroupId:
+            Ref: loadBalancerSecurityGroup
+      Tags:
+        - Key: Service
+          Value: !Ref packageName
+  ecsTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family:
+        Fn::Join:
+          - "-"
+          - - fargate
+            - Ref: packageName
+      Memory: !Ref memory
+      Cpu: !Ref cpu
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !Ref ecsTaskExecutionRole
+      TaskRoleArn: !Ref ecsTaskRole
+      ContainerDefinitions:
+        - Essential: true
+          Name: !Ref packageName
+          Memory: !Ref memory
+          Cpu: !Ref cpu
+          # Image:
+          #   Ref: dockerImageUrl
+          Image:
+            Fn::Join:
+              - "/"
+              - - !Join
+                  - "."
+                  - - !Ref "AWS::AccountId"
+                    - "dkr.ecr"
+                    - !Ref "AWS::Region"
+                    - "amazonaws.com"
+                - !Join
+                  - ":"
+                  - - "tastyboi-server"
+                    - "latest"
+          PortMappings:
+            - Protocol: tcp
+              ContainerPort: !Ref port
+          Environment:
+            - Name: PACKAGE_NAME
+              Value: !Ref packageName
+            - Name: SSM_PARAMETER_STORE_REGION
+              Value: us-east-1
+          Ulimits:
+            - Name: nofile
+              SoftLimit: 4096
+              HardLimit: 10240
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::Join:
+                  - "-"
+                  - - !Ref packageName
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: ecs
+  ecsService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - loadBalancerListener
+      - ecsLogs
+    Properties:
+      ServiceName: !Ref packageName
+      Cluster:
+        Fn::Join:
+          - "-"
+          - - !Ref packageName
+            - cluster
+      TaskDefinition: !Ref ecsTaskDefinition
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 75
+      DesiredCount: !Ref minimumCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Ref: fargateContainerSecurityGroup
+          Subnets:
+            Fn::FindInMap:
+              - RegionMap
+              - Ref: AWS::Region
+              - publicSubnets
+      LoadBalancers:
+        - ContainerName: !Ref packageName
+          ContainerPort: !Ref port
+          TargetGroupArn: !Ref targetGroup
+  autoScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - application-autoscaling.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: AutoScalingServiceTasks
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - application-autoscaling:*
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:PutMetricAlarm
+                  - ecs:DescribeServices
+                  - ecs:UpdateService
+                Resource: "*"
+  serviceAutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn:
+      - autoScalingRole
+      - ecsService
+    Properties:
+      MaxCapacity: !Ref maximumCount
+      MinCapacity: !Ref minimumCount
+      ResourceId:
+        Fn::Join:
+          - "/"
+          - - service
+            - Fn::Join:
+                - "-"
+                - - !Ref packageName
+                  - cluster
+            - Fn::GetAtt:
+                - ecsService
+                - Name
+      RoleARN:
+        Fn::GetAtt:
+          - autoScalingRole
+          - Arn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+  serviceAutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: serviceAutoScalingTarget
+    Properties:
+      PolicyName: ServiceAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref serviceAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 700
+        ScaleInCooldown: 0
+        ScaleOutCooldown: 0
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel:
+            Fn::Join:
+              - "/"
+              - - Fn::GetAtt:
+                    - loadBalancer
+                    - LoadBalancerFullName
+                - Fn::GetAtt:
+                    - targetGroup
+                    - TargetGroupFullName
+  ecsLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        Fn::Join:
+          - "-"
+          - - !Ref packageName
+Outputs:
+  ecsTaskRole:
+    Description: The ARN of the ECS Task role
+    Value:
+      Fn::GetAtt:
+        - ecsTaskRole
+        - Arn
+    Export:
+      Name:
+        Fn::Join:
+          - ":"
+          - - !Ref packageName
+            - ecsTaskRole
+  fargateContainerSecurityGroup:
+    Description: A security group used to allow Fargate containers to receive traffic
+    Value:
+      Ref: fargateContainerSecurityGroup
+    Export:
+      Name:
+        Fn::Join:
+          - ":"
+          - - !Ref packageName
+            - fargateContainerSecurityGroup

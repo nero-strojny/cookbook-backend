@@ -28,3 +28,6 @@
 ## Authors
 - Jake Strojny @jstrojny
 - Alexandra Nero @alexandra-nero
+
+
+aws cloudformation create-stack --stack-name tastyboi-server-fargate --template-body file://cloudformation.yaml --capabilities "CAPABILITY_NAMED_IAM" --region us-east-1 --parameters "ParameterKey=packageName,ParameterValue=tastyboi-server" "ParameterKey=version,ParameterValue=test-1" "ParameterKey=hostedZoneCertificateArn,ParameterValue=arn:aws:acm:us-east-1:401221454868:certificate/ff10a345-1e6d-412c-9a1d-214c62adefe4" "ParameterKey=maximumCount,ParameterValue=4" "ParameterKey=cpu,ParameterValue=1024" "ParameterKey=memory,ParameterValue=4096"
