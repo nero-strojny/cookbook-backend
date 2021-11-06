@@ -52,6 +52,7 @@ jobs:
         run: |
           ls -la
           echo -e '{\n\t"connectionString": "${{ secrets.DB_STRING }}",\n\t"emailPassword": "${{ secrets.EMAIL_PASSWORD }}"\n}' > config.json
+          ls -la
       - name: Docker Login
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
