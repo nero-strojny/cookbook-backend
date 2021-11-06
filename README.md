@@ -17,13 +17,9 @@
 - learned from [ToDo App Tutorial](https://levelup.gitconnected.com/build-a-todo-app-in-golang-mongodb-and-react-e1357b4690a6)
 
 ## Deployment:
-- scp over the files: `scp -r -i <pem file here> <path to cookbook backend> <ec2 instance>`
-- ssh into the ec2 instance `ssh -i "<pem file here>" <ec2 instance>`
-- start docker if it is not already started: `sudo service docker start`
-- stop old docker container if applicable
-- build the docker container: `docker build -t docker-example .`
-- run the docker container: `docker run --detach --publish 8080:8080 docker-example`
-- follow the logs if needed: `docker logs follow <container id>`
+- Infrastructure is fargate based, see cloud formation 
+
+aws cloudformation create-stack --stack-name tastyboi-server-fargate --template-body file://cloudformation.yaml --capabilities "CAPABILITY_NAMED_IAM" --region <region> --parameters "ParameterKey=packageName,ParameterValue=tastyboi-server" "ParameterKey=version,ParameterValue=test-1" "ParameterKey=hostedZoneCertificateArn,ParameterValue=arn:aws:acm:<region>:<account id>:certificate/<certificate id>" "ParameterKey=maximumCount,ParameterValue=4" "ParameterKey=cpu,ParameterValue=1024" "ParameterKey=memory,ParameterValue=4096"
 
 ## Authors
 - Jake Strojny @jstrojny
