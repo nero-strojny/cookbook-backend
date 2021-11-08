@@ -279,6 +279,20 @@ func TestErrorOnWrongPassword(t *testing.T) {
 	deleteUser(defaultNonAdminUser.UserName, adminToken)
 }
 
+func TestCannotUseTheSameUserName(t *testing.T) {
+	// setup, create a user
+	createUser(defaultNonAdminUser)
+
+	// try to create the same user
+	createResponse := createUser(defaultNonAdminUser)
+
+	// assert the correct status code
+	assert.Equal(t, 400, createResponse.Code, "Invalid Input Response is expected")
+
+	// cleanup
+	deleteUser(defaultNonAdminUser.UserName, adminToken)
+}
+
 func TestExpiredPassword(t *testing.T) {
 	// setup, change the user's password
 	expiryTime := time.Now().AddDate(0, 0, -1)
@@ -292,18 +306,4 @@ func TestExpiredPassword(t *testing.T) {
 
 	// assert the correct status code
 	assert.Equal(t, 401, response.Code, "Unauthorized Response is expected")
-}
-
-func TestCannotUseTheSameUserName(t *testing.T) {
-	// setup, create a user
-	createUser(defaultNonAdminUser)
-
-	// try to create the same user
-	createResponse := createUser(defaultNonAdminUser)
-
-	// assert the correct status code
-	assert.Equal(t, 400, createResponse.Code, "Invalid Input Response is expected")
-
-	// cleanup
-	deleteUser(defaultNonAdminUser.UserName, adminToken)
 }
