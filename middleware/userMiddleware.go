@@ -44,13 +44,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Required fields not included", http.StatusBadRequest)
 	} else if !requestedUser.AgreedToTerms {
 		http.Error(w, "User has not agreed to terms", http.StatusBadRequest)
-	}
-	payload, err := controller.CreateUser(requestedUser)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else {
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(payload.UserName)
+		payload, err := controller.CreateUser(requestedUser)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(payload.UserName)
+		}
 	}
 }
 
