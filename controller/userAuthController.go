@@ -31,12 +31,13 @@ func StringWithCharset(length int) string {
 func CreateUser(requestedUser models.RequestedUser) (models.User, error) {
 	// ensure there isn't another user with the same username
 	result := models.User{}
-	getFilter := bson.M{"username": requestedUser.UserName}
+	getFilter := bson.M{"$or": []bson.M{{"username": requestedUser.UserName}, {"email": requestedUser.Email}}}
 	getErr := UserCollection.FindOne(context.Background(), getFilter).Decode(&result)
 	if getErr != nil {
 		insertedUser := models.User{}
 		insertedUser.UserName = requestedUser.UserName
 		insertedUser.UserType = requestedUser.UserType
+		insertedUser.Email = requestedUser.Email
 		bytes, err := bcrypt.GenerateFromPassword([]byte(requestedUser.Password), 14)
 		if err != nil {
 			return models.User{}, err
@@ -51,7 +52,7 @@ func CreateUser(requestedUser models.RequestedUser) (models.User, error) {
 		insertedUser.UserID = result.InsertedID.(primitive.ObjectID)
 		return insertedUser, nil
 	}
-	return models.User{}, errors.New("Username already taken")
+	return models.User{}, errors.New("Username or email already in use")
 }
 
 //UpdateUserPassword updates a password
