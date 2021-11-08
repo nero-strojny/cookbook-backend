@@ -459,7 +459,7 @@ func TestDeleteRecipeWithUnknownID(t *testing.T) {
 
 func TestUpdateRecipeWithOtherUser(t *testing.T) {
 	//setUp create a recipe and a user
-	createUser(defaultNonAdminUser, recipeAdminToken)
+	createUser(defaultNonAdminUser)
 	accessTokenObject := models.AccessToken{}
 	userResponse := generateUserToken(defaultNonAdminAuthData)
 	body, _ := ioutil.ReadAll(userResponse.Body)
@@ -480,7 +480,7 @@ func TestUpdateRecipeWithOtherUser(t *testing.T) {
 
 func TestDeleteRecipeWithOtherUser(t *testing.T) {
 	//setUp create a recipe and a user
-	createUser(defaultNonAdminUser, recipeAdminToken)
+	createUser(defaultNonAdminUser)
 	accessTokenObject := models.AccessToken{}
 	userResponse := generateUserToken(defaultNonAdminAuthData)
 	body, _ := ioutil.ReadAll(userResponse.Body)

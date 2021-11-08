@@ -19,7 +19,7 @@ func main() {
 	var dBFlag string
 	var envFlag string
 
-	flag.StringVar(&dBFlag, "tastyboi-server-DB_STRING", "", "Database connection string")
+	flag.StringVar(&dBFlag, "DB_STRING", "", "Database connection string")
 	flag.StringVar(&envFlag, "ENV", "", "Environment string")
 	flag.Parse()
 

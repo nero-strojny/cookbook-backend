@@ -20,15 +20,19 @@ import (
 var userRouter = router.Router()
 
 var defaultNonAdminUser = models.RequestedUser{
-	UserName: "testUser",
-	Password: "password123",
-	UserType: "nonAdmin",
+	UserName:      "testUser",
+	Password:      "password123",
+	UserType:      "nonAdmin",
+	AgreedToTerms: true,
+	Email:         "testnonadminemail@email.com",
 }
 
 var defaultNonAdminUser2 = models.RequestedUser{
-	UserName: "testUser2",
-	Password: "password1234",
-	UserType: "nonAdmin",
+	UserName:      "testUser2",
+	Password:      "password1234",
+	UserType:      "nonAdmin",
+	AgreedToTerms: true,
+	Email:         "testemail@email.com",
 }
 
 var defaultNonAdminAuthData = models.AuthData{
@@ -38,9 +42,11 @@ var defaultNonAdminAuthData = models.AuthData{
 
 // This user is always present in the testing database, do not delete
 var defaultAdminUser = models.RequestedUser{
-	UserName: "testAdminUser",
-	Password: "adminPassword123",
-	UserType: "admin",
+	UserName:      "testAdminUser",
+	Password:      "adminPassword123",
+	UserType:      "admin",
+	AgreedToTerms: true,
+	Email:         "testemail@email.com",
 }
 
 var defaultAdminAuthData = models.AuthData{
@@ -58,10 +64,9 @@ func generateUserToken(authData models.AuthData) *httptest.ResponseRecorder {
 	return tokenResponse
 }
 
-func createUser(user models.RequestedUser, token string) *httptest.ResponseRecorder {
+func createUser(user models.RequestedUser) *httptest.ResponseRecorder {
 	jsonUser, _ := json.Marshal(user)
 	createUserRequest, _ := http.NewRequest("POST", "/api/user", bytes.NewBuffer(jsonUser))
-	createUserRequest.Header.Set("Authorization", "Bearer "+token)
 	createUserResponse := httptest.NewRecorder()
 	userRouter.ServeHTTP(createUserResponse, createUserRequest)
 	return createUserResponse
@@ -91,7 +96,7 @@ func TestGenerateUserToken(t *testing.T) {
 func TestCreateUser(t *testing.T) {
 	// create a user
 	var userName string
-	response := createUser(defaultNonAdminUser, adminToken)
+	response := createUser(defaultNonAdminUser)
 	body, _ := ioutil.ReadAll(response.Body)
 	json.Unmarshal(body, &userName)
 
@@ -105,7 +110,7 @@ func TestCreateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	// setup, create a user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 
 	// delete the same user
 	response := deleteUser(defaultNonAdminUser.UserName, adminToken)
@@ -116,7 +121,7 @@ func TestDeleteUser(t *testing.T) {
 
 func TestGetUsers(t *testing.T) {
 	// setup, create a user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 
 	// get all the users
 	users := []models.User{}
@@ -136,7 +141,7 @@ func TestGetUsers(t *testing.T) {
 
 func TestUpdatedUserPassword(t *testing.T) {
 	// setup, create a user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 
 	var updatedPassword = models.UpdatedPassword{
 		UserName:        "testUser",
@@ -158,20 +163,9 @@ func TestUpdatedUserPassword(t *testing.T) {
 	deleteUser(defaultNonAdminUser.UserName, adminToken)
 }
 
-func TestNeedTokenToCreateUsers(t *testing.T) {
-	//try using the nonAdmin's token to create another user
-	createResponse := createUser(defaultNonAdminUser2, "")
-
-	// assert the correct status code
-	assert.Equal(t, 401, createResponse.Code, "Unauthorized Response is expected")
-
-	// cleanup
-	deleteUser(defaultNonAdminUser.UserName, adminToken)
-}
-
 func TestNeedTokenToDeleteUsers(t *testing.T) {
 	// generate a token with non admin user data, create a second user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 
 	// delete the same user
 	deleteResponse := deleteUser(defaultNonAdminUser.UserName, "")
@@ -196,32 +190,45 @@ func TestNeedTokenToGetUsers(t *testing.T) {
 	deleteUser(defaultNonAdminUser.UserName, adminToken)
 }
 
-func TestOnlyAdminCanCreateUsers(t *testing.T) {
-	// generate a token with non admin user data
-	createUser(defaultNonAdminUser, adminToken)
-	accessTokenObject := models.AccessToken{}
-	response := generateUserToken(defaultNonAdminAuthData)
-	body, _ := ioutil.ReadAll(response.Body)
-	json.Unmarshal(body, &accessTokenObject)
+func TestNeedAllFieldsToCreateUser(t *testing.T) {
+	var incompleteUser = models.RequestedUser{
+		UserName:      "testAdminUser",
+		Password:      "adminPassword123",
+		UserType:      "admin",
+		AgreedToTerms: true,
+	}
 
 	//try using the nonAdmin's token to create another user
-	createResponse := createUser(defaultNonAdminUser2, accessTokenObject.AccessToken)
+	createResponse := createUser(incompleteUser)
 
 	// assert the correct status code
-	assert.Equal(t, 403, createResponse.Code, "Forbidden Response is expected")
+	assert.Equal(t, 400, createResponse.Code, "Bad Request Response is expected")
+}
 
-	// cleanup
-	deleteUser(defaultNonAdminUser.UserName, adminToken)
+func TestNeedToAgreeToCreateUser(t *testing.T) {
+	var badUser = models.RequestedUser{
+		UserName:      "someUser",
+		Password:      "adminPassword123",
+		UserType:      "admin",
+		AgreedToTerms: false,
+		Email:         "someEmail.com",
+	}
+
+	//try using the nonAdmin's token to create another user
+	createResponse := createUser(badUser)
+
+	// assert the correct status code
+	assert.Equal(t, 400, createResponse.Code, "Bad Request Response is expected")
 }
 
 func TestOnlyAdminCanDeleteUsers(t *testing.T) {
 	// generate a token with non admin user data, create a second user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 	accessTokenObject := models.AccessToken{}
 	response := generateUserToken(defaultNonAdminAuthData)
 	body, _ := ioutil.ReadAll(response.Body)
 	json.Unmarshal(body, &accessTokenObject)
-	createUser(defaultNonAdminUser2, adminToken)
+	createUser(defaultNonAdminUser2)
 
 	// delete the same user
 	deleteResponse := deleteUser(defaultNonAdminUser.UserName, accessTokenObject.AccessToken)
@@ -236,7 +243,7 @@ func TestOnlyAdminCanDeleteUsers(t *testing.T) {
 
 func TestOnlyAdminCanGetUsers(t *testing.T) {
 	// setup, create a user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 	accessTokenObject := models.AccessToken{}
 	response := generateUserToken(defaultNonAdminAuthData)
 	body, _ := ioutil.ReadAll(response.Body)
@@ -256,7 +263,7 @@ func TestOnlyAdminCanGetUsers(t *testing.T) {
 
 func TestErrorOnWrongPassword(t *testing.T) {
 	// setup, create a user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 
 	var defaultNonAdminAuthData = models.AuthData{
 		UserName: "testUser",
@@ -281,26 +288,18 @@ func TestExpiredPassword(t *testing.T) {
 	result.ExpiryDate = expiryTime.Format("2006.01.02 15:04:05")
 	controller.UserCollection.ReplaceOne(context.Background(), getFilter, result)
 
-	response := createUser(defaultNonAdminUser, adminToken)
+	response := deleteUser(defaultNonAdminUser.UserName, adminToken)
 
 	// assert the correct status code
 	assert.Equal(t, 401, response.Code, "Unauthorized Response is expected")
-
-	// cleanup
-	accessTokenObject := models.AccessToken{}
-	tokenResponse := generateUserToken(defaultAdminAuthData)
-	body, _ := ioutil.ReadAll(tokenResponse.Body)
-	json.Unmarshal(body, &accessTokenObject)
-	adminToken = accessTokenObject.AccessToken
-	deleteUser(defaultNonAdminUser.UserName, adminToken)
 }
 
 func TestCannotUseTheSameUserName(t *testing.T) {
 	// setup, create a user
-	createUser(defaultNonAdminUser, adminToken)
+	createUser(defaultNonAdminUser)
 
 	// try to create the same user
-	createResponse := createUser(defaultNonAdminUser, adminToken)
+	createResponse := createUser(defaultNonAdminUser)
 
 	// assert the correct status code
 	assert.Equal(t, 400, createResponse.Code, "Invalid Input Response is expected")

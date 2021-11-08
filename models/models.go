@@ -54,9 +54,11 @@ type User struct {
 
 // RequestedUser is what is needed to create a user
 type RequestedUser struct {
-	UserName string `json:"userName,omitempty"`
-	Password string `json:"password,omitEmpty"`
-	UserType string `json:"userType,omitempty"`
+	UserName      string `json:"userName,omitempty"`
+	Password      string `json:"password,omitEmpty"`
+	UserType      string `json:"userType,omitempty"`
+	Email         string `json:"email,omitempty"`
+	AgreedToTerms bool   `json:"agreedToTerms,omitempty"`
 }
 
 // AuthData is the authentication information for a user

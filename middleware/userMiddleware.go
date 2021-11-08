@@ -38,19 +38,19 @@ func authenticateSpecificUser(response http.ResponseWriter, request *http.Reques
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := authenticateUser(w, r, true)
-	if userErr != nil {
-		json.NewEncoder(w).Encode(userErr.Error())
+	var requestedUser models.RequestedUser
+	_ = json.NewDecoder(r.Body).Decode(&requestedUser)
+	if requestedUser.Email == "" || requestedUser.Password == "" || requestedUser.UserName == "" {
+		http.Error(w, "Required fields not included", http.StatusBadRequest)
+	} else if !requestedUser.AgreedToTerms {
+		http.Error(w, "User has not agreed to terms", http.StatusBadRequest)
+	}
+	payload, err := controller.CreateUser(requestedUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else {
-		var requestedUser models.RequestedUser
-		_ = json.NewDecoder(r.Body).Decode(&requestedUser)
-		payload, err := controller.CreateUser(requestedUser)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(payload.UserName)
-		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(payload.UserName)
 	}
 }
 
