@@ -12,7 +12,7 @@ var (
 )
 
 func Send(subject string, mime string, body string, recipients []string) error {
-	auth := smtp.PlainAuth("", from, config.GetConfig().EmailPassword, smtpHost)
+	auth := smtp.PlainAuth("", from, config.GetConfig("./config.json").EmailPassword, smtpHost)
 	email := []byte(subject + mime + body)
 	return smtp.SendMail(smtpHost+":"+smtpPort, auth, from, recipients, email)
 }

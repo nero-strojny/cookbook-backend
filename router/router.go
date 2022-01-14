@@ -57,5 +57,9 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/health", middleware.HealthCheck).Methods("GET")
 	router.HandleFunc("/api/health", middleware.HealthCheck).Methods("OPTIONS")
 
+	router.HandleFunc("/api/household", middleware.CreateHousehold).Methods("POST")
+	router.HandleFunc("/api/household/{id}", middleware.GetHousehold).Methods("GET")
+	router.HandleFunc("/api/household/{id}/user", middleware.AddUserToHousehold).Methods("PUT")
+
 	return router
 }

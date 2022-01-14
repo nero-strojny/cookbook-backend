@@ -27,6 +27,18 @@ func StringWithCharset(length int) string {
 	return string(b)
 }
 
+//GetUser - gets users by its ID
+func GetUser(userID string) (models.User, error) {
+	result := models.User{}
+	id, _ := primitive.ObjectIDFromHex(userID)
+	filter := bson.M{"_id": id}
+	err := UserCollection.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 //CreateUser creates a new user
 func CreateUser(requestedUser models.RequestedUser) (models.User, error) {
 	// ensure there isn't another user with the same username
@@ -166,15 +178,27 @@ func GenerateUserToken(authData models.AuthData) (string, error) {
 	return result.AccessToken, nil
 }
 
+//RetrieveUserFromToken
+func RetrieveUserFromToken(accessToken string) (models.User, error) {
+	if len(accessToken) == 0 {
+		return models.User{}, errors.New("No token in request")
+	}
+	result := models.User{}
+	filter := bson.M{"accesstoken": accessToken}
+	err := UserCollection.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		return models.User{}, err
+	}
+	return result, nil
+}
+
 //ValidateUser
 func ValidateUser(accessToken string, restrictAdmin bool) error {
 	if len(accessToken) == 0 {
 		return errors.New("No token in request")
 	}
 	currentTime := time.Now().Format("2006.01.02 15:04:05")
-	result := models.User{}
-	filter := bson.M{"accesstoken": accessToken}
-	err := UserCollection.FindOne(context.Background(), filter).Decode(&result)
+	result, err := RetrieveUserFromToken(accessToken)
 	if err != nil {
 		return err
 	} else if len(result.ExpiryDate) == 0 || result.ExpiryDate < currentTime {
@@ -186,8 +210,8 @@ func ValidateUser(accessToken string, restrictAdmin bool) error {
 	}
 }
 
-//ValidateSpecificUser
-func ValidateSpecificUser(accessToken string, userName string) error {
+//ValidateSpecificUser using access token and the username or user id
+func ValidateSpecificUser(accessToken string, userInfo string) error {
 	if len(accessToken) == 0 {
 		return errors.New("No token in request")
 	}
@@ -197,7 +221,7 @@ func ValidateSpecificUser(accessToken string, userName string) error {
 	err := UserCollection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil || len(result.ExpiryDate) == 0 || result.ExpiryDate < currentTime {
 		return err
-	} else if result.UserName != userName {
+	} else if result.UserName != userInfo && result.UserID.Hex() != userInfo {
 		return errors.New("Invalid permissions")
 	} else {
 		return nil
