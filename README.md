@@ -7,7 +7,7 @@
 - run `go get -u github.com/gorilla/mux`
 - run `go get golang.org/x/crypto/bcrypt`
 - add config file with the proper access to the mongodb
-- run `go run main.go -DB_STRING "<DB_STRING>"`
+- run `go run main.go -DB_STRING "<DB_STRING>"` 
 
 ## Testing
 - run `go get github.com/stretchr/testify/assert`
