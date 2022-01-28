@@ -26,7 +26,7 @@ func main() {
 	// If the dBString is empty, then we need to fall back on a file if one is present
 	if dBFlag == "" {
 		fmt.Println("Environment variable not found")
-		dBFlag = config.GetConfig("./config.json").ConnectionString
+		dBFlag = config.GetConfig().ConnectionString
 	} else {
 		fmt.Println("Environment variable found")
 	}

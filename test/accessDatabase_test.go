@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"log"
-	"server/config"
 	"server/controller"
 	"testing"
 
@@ -13,20 +12,15 @@ import (
 )
 
 var dbPointer = flag.String("DB_STRING", "", "Database connection string")
+var envPointer = flag.String("ENV", "", "Environment string")
 
 func TestDatabaseSetup(t *testing.T) {
-	// If the dBString is empty, then we need to fall back on a file if one is present
-	var dBFlag string
-	dBFlag = *dbPointer
-	if dBFlag == "" {
-		dBFlag = config.GetConfig("../config.json").ConnectionString
-	}
-	clientOptions := options.Client().ApplyURI(dBFlag)
+	clientOptions := options.Client().ApplyURI(*dbPointer)
 	mongoClient, err := mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 	controller.SetClients(mongoClient)
-	controller.GetCollections("dev")
+	controller.GetCollections(*envPointer)
 }

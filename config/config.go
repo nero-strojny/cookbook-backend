@@ -17,9 +17,9 @@ var (
 	once      = sync.Once{}
 )
 
-func GetConfig(path string) Config {
+func GetConfig() Config {
 	once.Do(func() {
-		jsonFile, _ := os.Open(path)
+		jsonFile, _ := os.Open("./config.json")
 		defer jsonFile.Close()
 
 		jsonData, _ := ioutil.ReadAll(jsonFile)
