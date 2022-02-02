@@ -3,9 +3,10 @@ package controller
 import (
 	"context"
 	"fmt"
-	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"server/models"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const dbName = "tastyBoiDatabase"
@@ -16,8 +17,11 @@ var RecipeCollection *mongo.Collection
 // UserCollection mongo db object to connect to the collection housing the user data
 var UserCollection *mongo.Collection
 
-// UserCollection mongo db object to connect to the collection housing the user data
+// IngredientCollection mongo db object to connect to the collection housing the user data
 var IngredientCollection *mongo.Collection
+
+// HouseholdCollection mongo db object to connect to the collection housing the user data
+var HouseholdCollection *mongo.Collection
 
 var client *mongo.Client
 
@@ -38,10 +42,12 @@ func GetCollections(env string) {
 		RecipeCollection = client.Database(dbName).Collection("testCookbookCollection")
 		UserCollection = client.Database(dbName).Collection("testUserCollection")
 		IngredientCollection = client.Database(dbName).Collection("testIngredientCollection")
+		HouseholdCollection = client.Database(dbName).Collection("testHouseholdCollectionCollection")
 	} else {
 		RecipeCollection = client.Database(dbName).Collection("cookbookCollection")
 		UserCollection = client.Database(dbName).Collection("userCollection")
 		IngredientCollection = client.Database(dbName).Collection("ingredientCollection")
+		HouseholdCollection = client.Database(dbName).Collection("householdCollectionCollection")
 
 	}
 	fmt.Println("Collection instances created!")

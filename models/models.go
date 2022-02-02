@@ -32,30 +32,25 @@ type Ingredient struct {
 // Step is what to do in order for a recipe
 type step struct {
 	Number int    `json:"number,omitempty"`
-	Text   string `json:"text,omitEmpty"`
-}
-
-// UserData is data pertaining to the user's physical characteristics
-type UserData struct {
-	UserID   primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	UserName string             `json:"userName,omitempty"`
+	Text   string `json:"text,omitempty"`
 }
 
 // User is the data representation of a user
 type User struct {
 	UserID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserName     string             `json:"userName,omitempty"`
-	PasswordHash string             `json:"passwordHash,omitEmpty"`
-	AccessToken  string             `json:"accessToken,omitEmpty"`
+	PasswordHash string             `json:"passwordHash,omitempty"`
+	AccessToken  string             `json:"accessToken,omitempty"`
 	ExpiryDate   string             `json:"expiryDate,omitempty"`
 	UserType     string             `json:"userType,omitempty"`
 	Email        string             `json:"email,omitempty"`
+	HouseholdId  string             `json:"householdId,omitempty"`
 }
 
 // RequestedUser is what is needed to create a user
 type RequestedUser struct {
 	UserName      string `json:"userName,omitempty"`
-	Password      string `json:"password,omitEmpty"`
+	Password      string `json:"password,omitempty"`
 	UserType      string `json:"userType,omitempty"`
 	Email         string `json:"email,omitempty"`
 	AgreedToTerms bool   `json:"agreedToTerms,omitempty"`
@@ -69,37 +64,37 @@ type AuthData struct {
 
 // AccessToken is the authentication information for a user
 type AccessToken struct {
-	AccessToken string `json:"accessToken,omitEmpty"`
+	AccessToken string `json:"accessToken,omitempty"`
 }
 
 // UpdatedPassword contains the updated password information
 type UpdatedPassword struct {
-	UserName        string `json:"userName,omitEmpty"`
-	CurrentPassword string `json:"currentPassword,omitEmpty"`
-	NewPassword     string `json:"newPassword,omitEmpty"`
+	UserName        string `json:"userName,omitempty"`
+	CurrentPassword string `json:"currentPassword,omitempty"`
+	NewPassword     string `json:"newPassword,omitempty"`
 }
 
 // PaginatedRequest
 type PaginatedRecipeRequest struct {
-	PageSize    int64  `json:"pageSize,omitEmpty"`
-	PageCount   int    `json:"pageCount,omitEmpty"`
-	QueryRecipe Recipe `json:"queryRecipe,omitEmpty"`
+	PageSize    int64  `json:"pageSize,omitempty"`
+	PageCount   int    `json:"pageCount,omitempty"`
+	QueryRecipe Recipe `json:"queryRecipe,omitempty"`
 }
 
 // PaginatedResponse
 type PaginatedRecipeResponse struct {
-	PageSize        int64    `json:"pageSize,omitEmpty"`
-	PageCount       int      `json:"pageCount,omitEmpty"`
-	NumberOfRecipes int64    `json:"numberOfRecipes,omitEmpty"`
-	Recipes         []Recipe `json:"recipes,omitEmpty"`
+	PageSize        int64    `json:"pageSize,omitempty"`
+	PageCount       int      `json:"pageCount,omitempty"`
+	NumberOfRecipes int64    `json:"numberOfRecipes,omitempty"`
+	Recipes         []Recipe `json:"recipes,omitempty"`
 }
 
 type Basket struct {
-	Produce  []string `json:"produce,omitEmpty"`
-	Protein  []string `json:"protein,omitEmpty"`
-	Pantry   []string `json:"pantry,omitEmpty"`
-	Dairy    []string `json:"dairy,omitEmpty"`
-	Alcohol  []string `json:"alcohol,omitEmpty"`
+	Produce  []string `json:"produce,omitempty"`
+	Protein  []string `json:"protein,omitempty"`
+	Pantry   []string `json:"pantry,omitempty"`
+	Dairy    []string `json:"dairy,omitempty"`
+	Alcohol  []string `json:"alcohol,omitempty"`
 	UserName string   `json:"userName"`
 }
 
@@ -110,4 +105,14 @@ type Config struct {
 
 type HealthStatus struct {
 	DB string `json:"database"`
+}
+
+type Household struct {
+	HouseholdID     primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	HouseholdName   string             `json:"householdName,omitempty"`
+	HeadOfHousehold string             `json:"headOfHousehold,omitempty"`
+}
+
+type RequestedHouseholdUpdate struct {
+	UserIdToAdd string `json:"userIdToAdd,omitempty"`
 }

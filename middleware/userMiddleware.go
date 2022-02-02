@@ -25,9 +25,9 @@ func authenticateUser(response http.ResponseWriter, request *http.Request, isAdm
 	return userErr
 }
 
-func authenticateSpecificUser(response http.ResponseWriter, request *http.Request, userName string) error {
+func authenticateSpecificUser(response http.ResponseWriter, request *http.Request, userInfo string) error {
 	bearerToken := request.Header.Get("Authorization")
-	userErr := controller.ValidateSpecificUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), userName)
+	userErr := controller.ValidateSpecificUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), userInfo)
 	if userErr != nil {
 		response.WriteHeader(http.StatusUnauthorized)
 	}

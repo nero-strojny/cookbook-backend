@@ -3,11 +3,12 @@ package test
 import (
 	"context"
 	"flag"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"server/controller"
 	"testing"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var dbPointer = flag.String("DB_STRING", "", "Database connection string")
