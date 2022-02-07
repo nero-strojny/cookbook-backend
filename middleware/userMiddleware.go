@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"server/db"
 	"strings"
 
 	"server/controller"
@@ -12,30 +13,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func authenticateUser(response http.ResponseWriter, request *http.Request, isAdmin bool) error {
-	bearerToken := request.Header.Get("Authorization")
-	userErr := controller.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), isAdmin)
-	if userErr != nil {
-		if userErr.Error() == "User does not have admin permissions" {
-			response.WriteHeader(http.StatusForbidden)
-		} else {
-			response.WriteHeader(http.StatusUnauthorized)
-		}
-	}
-	return userErr
+type UserMiddleware struct {
+	auth AuthMiddleware
+	Controller controller.UserControl
+	repository db.UserDB
 }
 
-func authenticateSpecificUser(response http.ResponseWriter, request *http.Request, userInfo string) error {
-	bearerToken := request.Header.Get("Authorization")
-	userErr := controller.ValidateSpecificUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), userInfo)
-	if userErr != nil {
-		response.WriteHeader(http.StatusUnauthorized)
-	}
-	return userErr
+
+func NewUserMiddleware(auth AuthMiddleware, controller controller.UserController, db db.UserDB) UserMiddleware {
+	return UserMiddleware{auth, controller, db}
 }
 
 //CreateUser creates a new user in the database
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func (um UserMiddleware) CreateUser(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	var requestedUser models.RequestedUser
@@ -45,7 +35,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	} else if !requestedUser.AgreedToTerms {
 		http.Error(w, "User has not agreed to terms", http.StatusBadRequest)
 	} else {
-		payload, err := controller.CreateUser(requestedUser)
+		payload, err := um.Controller.CreateUser(requestedUser, um.repository)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
@@ -56,12 +46,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 //UpdateUserPassword updates a user's password in the database
-func UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
+func (um UserMiddleware) UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "PUT")
 	var updatedPassword models.UpdatedPassword
 	_ = json.NewDecoder(r.Body).Decode(&updatedPassword)
-	err := controller.UpdateUserPassword(updatedPassword)
+	err := um.Controller.UpdateUserPassword(updatedPassword, um.repository)
 	if err != nil {
 		if err.Error() == "Username or password is not correct" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -72,15 +62,15 @@ func UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteUser controller DELETE request
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (um UserMiddleware) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := authenticateUser(w, r, true)
+	userErr := um.auth.authenticateUser(w, r, true)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		params := mux.Vars(r)
-		err := controller.DeleteUser(params["userName"])
+		err := um.Controller.DeleteUser(params["userName"], um.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -90,14 +80,14 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUsers controller GET request
-func GetUsers(w http.ResponseWriter, r *http.Request) {
+func (um UserMiddleware) GetUsers(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := authenticateUser(w, r, true)
+	userErr := um.auth.authenticateUser(w, r, true)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		payload, err := controller.GetUsers()
+		payload, err := um.Controller.GetUsers(um.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -107,13 +97,13 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 //GenerateUserToken refreshes a token
-func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
+func (um UserMiddleware) GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	var authData models.AuthData
 	accessTokenObject := models.AccessToken{}
 	_ = json.NewDecoder(r.Body).Decode(&authData)
-	token, err := controller.GenerateUserToken(authData)
+	token, err := um.Controller.GenerateUserToken(authData, um.repository)
 	if err != nil && err.Error() == "failed authentication, unknown user or password" {
 		w.WriteHeader(http.StatusBadRequest)
 	} else if err != nil {
@@ -124,14 +114,14 @@ func GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func EmailUser(w http.ResponseWriter, r *http.Request) {
+func (um UserMiddleware) EmailUser(w http.ResponseWriter, r *http.Request) {
 	bearerToken := strings.ReplaceAll(r.Header.Get("Authorization"), "Bearer ", "")
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 
 	var basket models.Basket
 	_ = json.NewDecoder(r.Body).Decode(&basket)
-	err := controller.SendEmail(basket, bearerToken)
+	err := um.Controller.EmailUser(basket, bearerToken, um.repository)
 
 	if err != nil {
 		fmt.Println("Error Sending Email")

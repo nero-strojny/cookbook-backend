@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
+	"server/db"
 
 	"server/controller"
 	"server/models"
@@ -10,17 +11,27 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type IngredientMiddleware struct {
+	auth AuthMiddleware
+	controller controller.IngredientControl
+	repository db.IngredientDB
+}
+
+func NewIngredientMiddleware(auth AuthMiddleware, controller controller.IngredientController, r db.IngredientDB) IngredientMiddleware {
+	return IngredientMiddleware{auth, controller, r}
+}
+
 //CreateIngredient creates a new ingredient in the database
-func CreateIngredient(w http.ResponseWriter, r *http.Request) {
+func (im IngredientMiddleware) CreateIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := authenticateUser(w, r, false)
+	userErr := im.auth.authenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		var requestedIngredient models.Ingredient
 		_ = json.NewDecoder(r.Body).Decode(&requestedIngredient)
-		payload, err := controller.CreateIngredient(requestedIngredient)
+		payload, err := im.controller.CreateIngredient(requestedIngredient, im.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
@@ -31,15 +42,15 @@ func CreateIngredient(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetIngredient by ID controller GET request
-func GetIngredient(w http.ResponseWriter, r *http.Request) {
+func (im IngredientMiddleware) GetIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := authenticateUser(w, r, false)
+	userErr := im.auth.authenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		params := mux.Vars(r)
-		payload, err := controller.GetIngredient(params["id"])
+		payload, err := im.controller.GetIngredient(params["id"], im.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -50,15 +61,15 @@ func GetIngredient(w http.ResponseWriter, r *http.Request) {
 }
 
 // QueryIngredient controller POST request
-func QueryIngredient(w http.ResponseWriter, r *http.Request) {
+func (im IngredientMiddleware) QueryIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := authenticateUser(w, r, false)
+	userErr := im.auth.authenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		prefixIngredient := r.URL.Query().Get("prefixIngredient")
-		payload, err := controller.QueryIngredient(prefixIngredient)
+		payload, err := im.controller.QueryIngredient(prefixIngredient, im.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
@@ -69,11 +80,11 @@ func QueryIngredient(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteIngredient controller DELETE request
-func DeleteIngredient(w http.ResponseWriter, r *http.Request) {
+func (im IngredientMiddleware) DeleteIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	params := mux.Vars(r)
 	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
-	err := controller.DeleteIngredient(params["id"])
+	err := im.controller.DeleteIngredient(params["id"], im.repository)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
