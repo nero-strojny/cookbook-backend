@@ -4,14 +4,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
 	"server/config"
-
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
 	"server/controller"
+	"server/db"
+	"server/middleware"
 	"server/router"
 )
 
@@ -37,9 +37,39 @@ func main() {
 		log.Fatal(err)
 	}
 
-	controller.SetClients(mongoClient)
-	controller.GetCollections(envFlag)
-	r := router.Router()
+	// Check the connection
+	pingErr := mongoClient.Ping(context.TODO(), nil)
+
+	if pingErr != nil {
+		log.Fatal(pingErr)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get controllers with their associated DB connections
+	var userController = controller.NewUserController()
+	var recipeController = controller.NewRecipeController()
+	var ingredientController = controller.NewIngredientController()
+	// Check this one since it calls NewUserRepository a second time
+	var authController = controller.NewAuthenticationController()
+	var serverController = controller.NewServerController(mongoClient)
+
+	// Get middleware wrapping their controllers
+	var authMiddleware = middleware.NewAuthMiddleware(authController, db.NewUserRepository(mongoClient))
+	var userMiddleware = middleware.NewUserMiddleware(authMiddleware, userController, db.NewUserRepository(mongoClient))
+	var recipeMiddleware = middleware.NewRecipeMiddleware(authMiddleware, recipeController, db.NewRecipeRepository(mongoClient))
+	var ingredientMiddleware = middleware.NewIngredientMiddleware(authMiddleware, ingredientController, db.NewIngredientRepository(mongoClient))
+	var serverMiddleware = middleware.NewServerMiddleware(serverController)
+
+	// Build router from middleware
+	var router = router.NewTastyBoiRouter(userMiddleware, recipeMiddleware, ingredientMiddleware, serverMiddleware)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Use router to build routes with middleware
+	r := router.Route()
 	fmt.Println("Starting server on the port 8080...")
+	// Start server
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
