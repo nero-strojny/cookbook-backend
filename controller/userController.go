@@ -13,6 +13,7 @@ import (
 
 const (
 	from     = "tasty.boi.shopping.list@gmail.com"
+	subject = "Subject: Grocery List\r\n\r\n"
 	smtpHost = "smtp.gmail.com"
 	smtpPort = "587"
 )
