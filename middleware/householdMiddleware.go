@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
+	"server/db"
 	"strings"
 
 	"server/controller"
@@ -11,23 +12,34 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type HouseholdMiddleware struct {
+	auth AuthMiddleware
+	um UserMiddleware
+	controller controller.HouseholdControl
+	repository db.HouseholdDB
+}
+
+func NewHouseholdMiddleware(auth AuthMiddleware, um UserMiddleware, controller controller.HouseholdControl, r db.HouseholdDB) HouseholdMiddleware {
+	return HouseholdMiddleware{auth, um, controller, r}
+}
+
 //CreateHousehold creates a new household in the database
-func CreateHousehold(w http.ResponseWriter, r *http.Request) {
+func (hm HouseholdMiddleware) CreateHousehold(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := authenticateUser(w, r, false)
+	userErr := hm.auth.authenticateUser(w, r, false)
 	bearerToken := r.Header.Get("Authorization")
-	currentUser, _ := controller.RetrieveUserFromToken(strings.ReplaceAll(bearerToken, "Bearer ", ""))
+	currentUser, _ := hm.um.repository.GetUserByAccessToken(strings.ReplaceAll(bearerToken, "Bearer ", ""))
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		var requestedHousehold models.Household
 		_ = json.NewDecoder(r.Body).Decode(&requestedHousehold)
-		payload, err := controller.CreateHousehold(requestedHousehold, currentUser)
+		payload, err := hm.controller.CreateHousehold(requestedHousehold, currentUser, hm.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
-			_, updateErr := controller.AddUserToHousehold(payload.HouseholdID.Hex(), currentUser.UserID.Hex())
+			_, updateErr := hm.controller.AddUserToHousehold(payload.HouseholdID.Hex(), currentUser.UserID.Hex(), hm.um.repository)
 			if updateErr != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
@@ -38,15 +50,15 @@ func CreateHousehold(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetHousehold by ID controller GET request
-func GetHousehold(w http.ResponseWriter, r *http.Request) {
+func (hm HouseholdMiddleware) GetHousehold(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := authenticateUser(w, r, false)
+	userErr := hm.auth.authenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		params := mux.Vars(r)
-		payload, err := controller.GetHousehold(params["id"])
+		payload, err := hm.controller.GetHousehold(params["id"], hm.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -56,21 +68,21 @@ func GetHousehold(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func AddUserToHousehold(w http.ResponseWriter, r *http.Request) {
+func (hm HouseholdMiddleware) AddUserToHousehold(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	params := mux.Vars(r)
 	w.Header().Set("Access-Control-Allow-Methods", "PUT")
-	getPayload, getErr := controller.GetHousehold(params["id"])
+	getPayload, getErr := hm.controller.GetHousehold(params["id"], hm.repository)
 	if getErr != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
-	userErr := authenticateSpecificUser(w, r, getPayload.HeadOfHousehold)
+	userErr := hm.auth.authenticateSpecificUser(w, r, getPayload.HeadOfHousehold)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		var requestedHouseholdUpdate models.RequestedHouseholdUpdate
 		json.NewDecoder(r.Body).Decode(&requestedHouseholdUpdate)
-		payload, err := controller.AddUserToHousehold(params["id"], requestedHouseholdUpdate.UserIdToAdd)
+		payload, err := hm.controller.AddUserToHousehold(params["id"], requestedHouseholdUpdate.UserIdToAdd, hm.um.repository)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {

@@ -1,7 +1,8 @@
-package controller
+package test
 
 import (
 	"errors"
+	"server/controller"
 	"server/models"
 	"testing"
 )
@@ -22,7 +23,7 @@ func (m mockUserCreator) CreateUser(userInformation models.RequestedUser) (model
 }
 
 func TestCreateUser(t *testing.T) {
-	c := NewUserController()
+	c := controller.NewUserController()
 	user := models.RequestedUser{UserName: "TEST"}
 	output, err := c.CreateUser(user, mockUserCreator{})
 	if err != nil {
@@ -35,7 +36,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestCreateUserFailure(t *testing.T) {
-	c := NewUserController()
+	c := controller.NewUserController()
 	user := models.RequestedUser{UserName: "TEST"}
 	output, err := c.CreateUser(user, failedUserCreator{})
 	if err == nil {

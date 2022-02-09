@@ -40,6 +40,7 @@ type UserDeleter interface {
 type UserUpdater interface {
 	UpdatePassword(username string, oldPassword string, newPassword string) error
 	UpdateToken(user models.User) error
+	UpdateUser(user models.User) (models.User, error)
 }
 
 type UserRepository struct {
@@ -180,6 +181,20 @@ func (ur UserRepository) UpdateToken(user models.User) error {
 	}
 	return nil
 }
+
+func (ur UserRepository) UpdateUser(user models.User) (models.User, error) {
+	filter := bson.M{"_id": user.UserID}
+
+	opts := options.Replace().SetUpsert(true)
+	_, err := ur.userCollection.ReplaceOne(context.Background(), filter, user, opts)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
 
 
 

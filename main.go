@@ -53,6 +53,7 @@ func main() {
 	// Check this one since it calls NewUserRepository a second time
 	var authController = controller.NewAuthenticationController()
 	var serverController = controller.NewServerController(mongoClient)
+	var householdController = controller.NewHouseholdController()
 
 	// Get middleware wrapping their controllers
 	var authMiddleware = middleware.NewAuthMiddleware(authController, db.NewUserRepository(mongoClient))
@@ -60,9 +61,13 @@ func main() {
 	var recipeMiddleware = middleware.NewRecipeMiddleware(authMiddleware, recipeController, db.NewRecipeRepository(mongoClient))
 	var ingredientMiddleware = middleware.NewIngredientMiddleware(authMiddleware, ingredientController, db.NewIngredientRepository(mongoClient))
 	var serverMiddleware = middleware.NewServerMiddleware(serverController)
+	var householdMiddleware = middleware.NewHouseholdMiddleware(authMiddleware, userMiddleware, householdController, db.NewHouseholdRepository(mongoClient))
+
+	// If the above dependency setup starts getting much bigger we might want to look into a DI package like dig or wire
+	// to more cleanly manage it
 
 	// Build router from middleware
-	var router = router.NewTastyBoiRouter(userMiddleware, recipeMiddleware, ingredientMiddleware, serverMiddleware)
+	var router = router.NewTastyBoiRouter(userMiddleware, recipeMiddleware, ingredientMiddleware, serverMiddleware, householdMiddleware)
 	if err != nil {
 		log.Fatal(err)
 	}

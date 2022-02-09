@@ -11,17 +11,19 @@ type TastyBoiRouter struct {
 	rm middleware.RecipeMiddleware
 	im middleware.IngredientMiddleware
 	sm middleware.ServerMiddleware
+	hm middleware.HouseholdMiddleware
 }
 
 func NewTastyBoiRouter(um middleware.UserMiddleware,
 	rm middleware.RecipeMiddleware,
-	im middleware.IngredientMiddleware, sm middleware.ServerMiddleware) TastyBoiRouter {
-	return TastyBoiRouter{um, rm, im, sm}
+	im middleware.IngredientMiddleware,
+	sm middleware.ServerMiddleware,
+	hm middleware.HouseholdMiddleware) TastyBoiRouter {
+	return TastyBoiRouter{um, rm, im, sm, hm}
 }
 
 // Route is exported and used in main.go
 func (r TastyBoiRouter) Route() *mux.Router {
-
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/recipes", r.rm.PostPaginatedRecipes).Methods("POST")
@@ -53,26 +55,17 @@ func (r TastyBoiRouter) Route() *mux.Router {
 	router.HandleFunc("/api/ingredient", r.im.CreateIngredient).Methods("POST")
 	router.HandleFunc("/api/ingredient", middleware.Options).Methods("OPTIONS")
 
-	router.HandleFunc("/api/user", r.um.CreateUser).Methods("POST")
-	router.HandleFunc("/api/user", r.um.UpdateUserPassword).Methods("PUT")
-	router.HandleFunc("/api/user", middleware.Options).Methods("OPTIONS")
 
-	router.HandleFunc("/api/users", r.um.GetUsers).Methods("GET")
-
-	router.HandleFunc("/api/user/{userName}", r.um.DeleteUser).Methods("DELETE")
-
-	router.HandleFunc("/api/userToken", r.um.GenerateUserToken).Methods("POST")
-	router.HandleFunc("/api/userToken", middleware.Options).Methods("OPTIONS")
-
-	router.HandleFunc("/api/basket", r.um.EmailUser).Methods("POST")
-	router.HandleFunc("/api/basket", middleware.Options).Methods("OPTIONS")
 
 	router.HandleFunc("/api/health", r.sm.HealthCheck).Methods("GET")
 	router.HandleFunc("/api/health", middleware.Options).Methods("OPTIONS")
 
-	router.HandleFunc("/api/household", middleware.CreateHousehold).Methods("POST")
-	router.HandleFunc("/api/household/{id}", middleware.GetHousehold).Methods("GET")
-	router.HandleFunc("/api/household/{id}/user", middleware.AddUserToHousehold).Methods("PUT")
+	router.HandleFunc("/api/household", r.hm.CreateHousehold).Methods("POST")
+	router.HandleFunc("/api/household", middleware.Options).Methods("OPTIONS")
+	router.HandleFunc("/api/household/{id}", r.hm.GetHousehold).Methods("GET")
+	router.HandleFunc("/api/household/{id}", middleware.Options).Methods("OPTIONS")
+	router.HandleFunc("/api/household/{id}/user", r.hm.AddUserToHousehold).Methods("PUT")
+	router.HandleFunc("/api/household/{id}/user", middleware.Options).Methods("OPTIONS")
 
 	return router
 }
