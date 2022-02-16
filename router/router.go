@@ -65,6 +65,9 @@ func (r TastyBoiRouter) Route() *mux.Router {
 	router.HandleFunc("/api/user/{userName}", r.um.DeleteUser).Methods("DELETE")
 	router.HandleFunc("/api/user/{userName}", middleware.Options).Methods("OPTIONS")
 
+	router.HandleFunc("/api/userToken", r.um.GenerateUserToken).Methods("POST")
+	router.HandleFunc("/api/userToken", middleware.Options).Methods("OPTIONS")
+
 	router.HandleFunc("/api/health", r.sm.HealthCheck).Methods("GET")
 	router.HandleFunc("/api/health", middleware.Options).Methods("OPTIONS")
 
