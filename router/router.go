@@ -55,7 +55,15 @@ func (r TastyBoiRouter) Route() *mux.Router {
 	router.HandleFunc("/api/ingredient", r.im.CreateIngredient).Methods("POST")
 	router.HandleFunc("/api/ingredient", middleware.Options).Methods("OPTIONS")
 
+	router.HandleFunc("/api/user", r.um.CreateUser).Methods("POST")
+	router.HandleFunc("/api/user", r.um.UpdateUserPassword).Methods("PUT")
+	router.HandleFunc("/api/user", middleware.Options).Methods("OPTIONS")
 
+	router.HandleFunc("/api/users", r.um.GetUsers).Methods("GET")
+	router.HandleFunc("/api/users", middleware.Options).Methods("OPTIONS")
+
+	router.HandleFunc("/api/user/{userName}", r.um.DeleteUser).Methods("DELETE")
+	router.HandleFunc("/api/user/{userName}", middleware.Options).Methods("OPTIONS")
 
 	router.HandleFunc("/api/health", r.sm.HealthCheck).Methods("GET")
 	router.HandleFunc("/api/health", middleware.Options).Methods("OPTIONS")
