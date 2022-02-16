@@ -33,7 +33,7 @@ jobs:
       run: go build -v .
 
     - name: Test
-      run: go test -v ./test -DB_STRING "${{ secrets.DB_STRING }}" -ENV 'dev'
+      run: go test -v ./test
 
   continuous-deployment:
     runs-on: ubuntu-latest

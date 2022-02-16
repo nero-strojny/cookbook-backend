@@ -28,7 +28,7 @@ func (ac AuthController) ValidateUser(accessToken string, restrictAdmin bool, re
 	if err != nil {
 		return err
 	} else if len(user.ExpiryDate) == 0 || user.ExpiryDate < currentTime {
-		return errors.New("expired Token")
+		return errors.New("expired token")
 	} else if restrictAdmin && user.UserType != "admin" {
 		return errors.New("user does not have admin permissions")
 	} else {
