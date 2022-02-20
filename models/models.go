@@ -106,13 +106,3 @@ type Config struct {
 type HealthStatus struct {
 	DB string `json:"database"`
 }
-
-type Household struct {
-	HouseholdID     primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	HouseholdName   string             `json:"householdName,omitempty"`
-	HeadOfHousehold string             `json:"headOfHousehold,omitempty"`
-}
-
-type RequestedHouseholdUpdate struct {
-	UserIdToAdd string `json:"userIdToAdd,omitempty"`
-}
