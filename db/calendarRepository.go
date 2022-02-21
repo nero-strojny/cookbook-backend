@@ -14,6 +14,12 @@ type CalendarDB interface {
 	CalendarGetter
 	CalendarCreator
 	CalendarDeleter
+	CalendarUpdater
+}
+
+type CalendarGetterUpdater interface {
+	CalendarGetter
+	CalendarUpdater
 }
 
 type CalendarGetter interface {
@@ -26,6 +32,10 @@ type CalendarCreator interface {
 
 type CalendarDeleter interface {
 	DeleteCalendar(householdID string) error
+}
+
+type CalendarUpdater interface {
+	UpdateCalendar(calendarID string, updatedCalendar models.Calendar) (models.Calendar, error)
 }
 
 type CalendarRepository struct {
@@ -41,15 +51,11 @@ func NewCalendarRepository(client *mongo.Client) *CalendarRepository {
 func (c CalendarRepository) GetCalendar(householdID string, startDate string) (models.Calendar, error) {
 	result := models.Calendar{}
 	householdIDObject, _ := primitive.ObjectIDFromHex(householdID)
-	filterArray := bson.A{}
-	idFilter := bson.M{"householdID": householdIDObject}
-	dateFilter := bson.M{"startDate": startDate}
-	filterArray = append(filterArray, idFilter)
-	filterArray = append(filterArray, dateFilter)
+	filter := bson.M{"householdID": householdIDObject, "startdate": startDate}
 
 	err := c.calendarCollection.FindOne(
 		context.Background(),
-		bson.M{"$and": filterArray},
+		filter,
 	).Decode(&result)
 
 	if err != nil {
@@ -79,6 +85,13 @@ func (c CalendarRepository) UpdateCalendar(calendarID string, updatedCalendar mo
 	}
 	if result.UpsertedID != nil {
 		updatedCalendar.CalendarID = result.UpsertedID.(primitive.ObjectID)
+	} else {
+		updatedCalendar.CalendarID, _ = primitive.ObjectIDFromHex(calendarID)
 	}
 	return updatedCalendar, nil
 }
+
+func (c CalendarRepository) DeleteCalendar(householdID string) error {
+	panic("implement me")
+}
+
