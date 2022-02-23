@@ -56,6 +56,7 @@ func (hc HouseholdController) GetCalendar(householdID string, startDate string, 
 
 func (hc HouseholdController) UpdateCalendar(householdID string, calendar models.Calendar, updater db.CalendarGetterUpdater) (models.Calendar, error) {
 	currentCalendar, _ := updater.GetCalendar(householdID, calendar.StartDate)
+	calendar.CalendarID = currentCalendar.CalendarID
 	calendar.HouseholdID, _ = primitive.ObjectIDFromHex(householdID)
 	updatedCalendar, err := updater.UpdateCalendar(currentCalendar.CalendarID.Hex(), calendar)
 	return updatedCalendar, err
