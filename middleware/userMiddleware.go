@@ -65,7 +65,7 @@ func (um UserMiddleware) UpdateUserPassword(w http.ResponseWriter, r *http.Reque
 func (um UserMiddleware) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := um.auth.authenticateUser(w, r, true)
+	userErr := um.auth.AuthenticateUser(w, r, true)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -83,7 +83,7 @@ func (um UserMiddleware) DeleteUser(w http.ResponseWriter, r *http.Request) {
 func (um UserMiddleware) GetUsers(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := um.auth.authenticateUser(w, r, true)
+	userErr := um.auth.AuthenticateUser(w, r, true)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {

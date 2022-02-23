@@ -29,7 +29,7 @@ func NewHouseholdMiddleware(auth AuthMiddleware, um UserMiddleware, controller c
 func (hm HouseholdMiddleware) CreateHousehold(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := hm.auth.authenticateUser(w, r, false)
+	userErr := hm.auth.AuthenticateUser(w, r, false)
 	bearerToken := r.Header.Get("Authorization")
 	currentUser, _ := hm.um.repository.GetUserByAccessToken(strings.ReplaceAll(bearerToken, "Bearer ", ""))
 	if userErr != nil {
@@ -55,7 +55,7 @@ func (hm HouseholdMiddleware) CreateHousehold(w http.ResponseWriter, r *http.Req
 func (hm HouseholdMiddleware) GetHousehold(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := hm.auth.authenticateUser(w, r, false)
+	userErr := hm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -78,7 +78,7 @@ func (hm HouseholdMiddleware) AddUserToHousehold(w http.ResponseWriter, r *http.
 	if getErr != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
-	userErr := hm.auth.authenticateSpecificUser(w, r, getPayload.HeadOfHousehold)
+	userErr := hm.auth.AuthenticateSpecificUser(w, r, getPayload.HeadOfHousehold)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -96,7 +96,7 @@ func (hm HouseholdMiddleware) AddUserToHousehold(w http.ResponseWriter, r *http.
 func (hm HouseholdMiddleware) GetCalendar(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := hm.auth.authenticateUser(w, r, false)
+	userErr := hm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -116,7 +116,7 @@ func (hm HouseholdMiddleware) GetCalendar(w http.ResponseWriter, r *http.Request
 func (hm HouseholdMiddleware) UpdateCalendar(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := hm.auth.authenticateUser(w, r, false)
+	userErr := hm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -136,7 +136,7 @@ func (hm HouseholdMiddleware) UpdateCalendar(w http.ResponseWriter, r *http.Requ
 func (hm HouseholdMiddleware) CreateCalendar(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := hm.auth.authenticateUser(w, r, false)
+	userErr := hm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
