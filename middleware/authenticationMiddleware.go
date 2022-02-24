@@ -12,11 +12,11 @@ type AuthMiddleware struct {
 	repository db.UserDB
 }
 
-func NewAuthMiddleware(ac controller.AuthController, db db.UserDB) AuthMiddleware {
+func NewAuthMiddleware(ac controller.AuthControl, db db.UserDB) AuthMiddleware {
 	return AuthMiddleware{ac, db}
 }
 
-func (am AuthMiddleware) authenticateUser(response http.ResponseWriter, request *http.Request, isAdmin bool) error {
+func (am AuthMiddleware) AuthenticateUser(response http.ResponseWriter, request *http.Request, isAdmin bool) error {
 	bearerToken := request.Header.Get("Authorization")
 	userErr := am.ac.ValidateUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), isAdmin, am.repository)
 	if userErr != nil {
@@ -25,11 +25,13 @@ func (am AuthMiddleware) authenticateUser(response http.ResponseWriter, request 
 		} else {
 			response.WriteHeader(http.StatusUnauthorized)
 		}
+	} else {
+		response.WriteHeader(http.StatusOK)
 	}
 	return userErr
 }
 
-func (am AuthMiddleware) authenticateSpecificUser(response http.ResponseWriter, request *http.Request, userInfo string) error {
+func (am AuthMiddleware) AuthenticateSpecificUser(response http.ResponseWriter, request *http.Request, userInfo string) error {
 	bearerToken := request.Header.Get("Authorization")
 	userErr := am.ac.ValidateSpecificUser(strings.ReplaceAll(bearerToken, "Bearer ", ""), userInfo, am.repository)
 	if userErr != nil {

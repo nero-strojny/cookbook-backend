@@ -25,7 +25,7 @@ func NewIngredientMiddleware(auth AuthMiddleware, controller controller.Ingredie
 func (im IngredientMiddleware) CreateIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := im.auth.authenticateUser(w, r, false)
+	userErr := im.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -45,7 +45,7 @@ func (im IngredientMiddleware) CreateIngredient(w http.ResponseWriter, r *http.R
 func (im IngredientMiddleware) GetIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := im.auth.authenticateUser(w, r, false)
+	userErr := im.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -64,7 +64,7 @@ func (im IngredientMiddleware) GetIngredient(w http.ResponseWriter, r *http.Requ
 func (im IngredientMiddleware) QueryIngredient(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := im.auth.authenticateUser(w, r, false)
+	userErr := im.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {

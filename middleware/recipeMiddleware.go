@@ -26,7 +26,7 @@ func NewRecipeMiddleware(auth AuthMiddleware, controller controller.RecipeContro
 func (rm RecipeMiddleware) PostPaginatedRecipes(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := rm.auth.authenticateUser(w, r, false)
+	userErr := rm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -46,7 +46,7 @@ func (rm RecipeMiddleware) PostPaginatedRecipes(w http.ResponseWriter, r *http.R
 func (rm RecipeMiddleware) GetRecipe(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := rm.auth.authenticateUser(w, r, false)
+	userErr := rm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -65,7 +65,7 @@ func (rm RecipeMiddleware) GetRecipe(w http.ResponseWriter, r *http.Request) {
 func (rm RecipeMiddleware) GetRandomRecipes(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	userErr := rm.auth.authenticateUser(w, r, false)
+	userErr := rm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -89,7 +89,7 @@ func (rm RecipeMiddleware) GetRandomRecipes(w http.ResponseWriter, r *http.Reque
 func (rm RecipeMiddleware) CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	userErr := rm.auth.authenticateUser(w, r, false)
+	userErr := rm.auth.AuthenticateUser(w, r, false)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -117,7 +117,7 @@ func (rm RecipeMiddleware) UpdateRecipe(w http.ResponseWriter, r *http.Request) 
 	if getErr != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
-	userErr := rm.auth.authenticateSpecificUser(w, r, getPayload.UserName)
+	userErr := rm.auth.AuthenticateSpecificUser(w, r, getPayload.UserName)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
@@ -141,7 +141,7 @@ func (rm RecipeMiddleware) DeleteRecipe(w http.ResponseWriter, r *http.Request) 
 	if getErr != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
-	userErr := rm.auth.authenticateSpecificUser(w, r, getPayload.UserName)
+	userErr := rm.auth.AuthenticateSpecificUser(w, r, getPayload.UserName)
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {

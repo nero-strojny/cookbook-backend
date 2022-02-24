@@ -61,7 +61,11 @@ func main() {
 	var recipeMiddleware = middleware.NewRecipeMiddleware(authMiddleware, recipeController, db.NewRecipeRepository(mongoClient))
 	var ingredientMiddleware = middleware.NewIngredientMiddleware(authMiddleware, ingredientController, db.NewIngredientRepository(mongoClient))
 	var serverMiddleware = middleware.NewServerMiddleware(serverController)
-	var householdMiddleware = middleware.NewHouseholdMiddleware(authMiddleware, userMiddleware, householdController, db.NewHouseholdRepository(mongoClient))
+	var householdMiddleware = middleware.NewHouseholdMiddleware(authMiddleware,
+																userMiddleware,
+																householdController,
+																db.NewHouseholdRepository(mongoClient),
+																db.NewCalendarRepository(mongoClient))
 
 	// If the above dependency setup starts getting much bigger we might want to look into a DI package like dig or wire
 	// to more cleanly manage it
