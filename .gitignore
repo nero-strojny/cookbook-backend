@@ -2,3 +2,4 @@ server.exe
 config.json
 .vscode/ 
 .idea/
+.DS_STORE

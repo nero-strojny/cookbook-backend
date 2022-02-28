@@ -8,7 +8,7 @@ import (
 )
 
 type AuthMiddleware struct {
-	ac controller.AuthControl
+	ac         controller.AuthControl
 	repository db.UserDB
 }
 
@@ -25,8 +25,6 @@ func (am AuthMiddleware) AuthenticateUser(response http.ResponseWriter, request 
 		} else {
 			response.WriteHeader(http.StatusUnauthorized)
 		}
-	} else {
-		response.WriteHeader(http.StatusOK)
 	}
 	return userErr
 }
