@@ -5,10 +5,10 @@ files:
     destination: /home/ec2-user/cookbook-backend/
 hooks:
   ApplicationStop:
-   - location: applicationStop.sh
-     timeout: 300
-     runas: root
+    - location: applicationStop.sh
+      timeout: 300
+      runas: root
   ApplicationStart:
-   - location: run.sh
-     timeout: 300
-     runas: root
+    - location: run.sh
+      timeout: 300
+      runas: root

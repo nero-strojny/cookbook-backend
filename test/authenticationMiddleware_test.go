@@ -9,7 +9,8 @@ import (
 	"testing"
 )
 
-type mockAuthControl struct {}
+type mockAuthControl struct{}
+
 func (m mockAuthControl) ValidateUser(accessToken string, restrictAdmin bool, repository db.UserGetter) error {
 	return nil
 }
@@ -18,7 +19,8 @@ func (m mockAuthControl) ValidateSpecificUser(accessToken string, userName strin
 	return nil
 }
 
-type unauthorizedUserControl struct {}
+type unauthorizedUserControl struct{}
+
 func (u unauthorizedUserControl) ValidateUser(accessToken string, restrictAdmin bool, repository db.UserGetter) error {
 	return errors.New("unauthorized user")
 }
@@ -79,9 +81,3 @@ func TestNonAdminUserForAdminFunction(t *testing.T) {
 		t.Fatal("Error should have been returned for nonadmin using admin endpoint")
 	}
 }
-
-
-
-
-
-

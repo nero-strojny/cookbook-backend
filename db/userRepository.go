@@ -194,9 +194,3 @@ func (ur UserRepository) UpdateUser(user models.User) (models.User, error) {
 
 	return user, nil
 }
-
-
-
-
-
-

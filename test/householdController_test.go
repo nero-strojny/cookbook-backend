@@ -50,7 +50,7 @@ func TestUpdateUserHousehold(t *testing.T) {
 type mockCalendarGetterUpdater struct{}
 
 func (m mockCalendarGetterUpdater) GetCalendar(householdID string, startDate string) (models.Calendar, error) {
-	originalID,err1 := primitive.ObjectIDFromHex("111111111111111111111111")
+	originalID, err1 := primitive.ObjectIDFromHex("111111111111111111111111")
 	originalMonday, err2 := primitive.ObjectIDFromHex("222222222222222222222222")
 	if err1 != nil {
 
@@ -70,7 +70,7 @@ func (m mockCalendarGetterUpdater) UpdateCalendar(calendarID string, updatedCale
 
 func TestUpdateCalendar(t *testing.T) {
 	hc := controller.NewHouseholdController()
-	newMonday,_ := primitive.ObjectIDFromHex("333333333333333333333333")
+	newMonday, _ := primitive.ObjectIDFromHex("333333333333333333333333")
 	newCalendar := models.Calendar{Monday: newMonday}
 	calendar, _ := hc.UpdateCalendar("testHousehold", newCalendar, mockCalendarGetterUpdater{})
 	if calendar.CalendarID.Hex() != "111111111111111111111111" {
@@ -85,5 +85,3 @@ func TestUpdateCalendar(t *testing.T) {
 		t.Fatalf("Expected NewMonday but got %s", calendar.Monday.Hex())
 	}
 }
-
-

@@ -12,7 +12,7 @@ import (
 )
 
 type IngredientMiddleware struct {
-	auth AuthMiddleware
+	auth       AuthMiddleware
 	controller controller.IngredientControl
 	repository db.IngredientDB
 }

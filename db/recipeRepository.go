@@ -23,7 +23,6 @@ type RecipeGetter interface {
 	GetPaginatedRecipes(request models.PaginatedRecipeRequest) ([]models.Recipe, error)
 	GetFilteredRecipeCount(request models.PaginatedRecipeRequest) (int64, error)
 	CountRecipes() (int64, error)
-
 }
 
 type RecipeCreator interface {

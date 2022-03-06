@@ -12,32 +12,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.13
-      id: go
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.13
+        id: go
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
 
-    - name: Build
-      run: go build -v .
+      - name: Build
+        run: go build -v .
 
-    - name: Test
-      run: go test -v ./test
+      - name: Test
+        run: go test -v ./test
 
   continuous-deployment:
     runs-on: ubuntu-latest
-    needs: [continuous-integration]
+    needs: [ continuous-integration ]
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Check out code into the Go module directory
@@ -53,7 +53,7 @@ jobs:
       - name: Create config file
         run: |
           echo -e '{\n\t"connectionString": "${{ secrets.DB_STRING }}",\n\t"emailPassword": "${{ secrets.EMAIL_PASSWORD }}"\n}' > config.json
-          
+
       - name: Docker Login
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
@@ -62,4 +62,4 @@ jobs:
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tastyboi-server:${{ github.sha }}
 
       - name: AWS Deployment
-        run:  aws ecs update-service --force-new-deployment --cluster tastyboi-server-cluster --service tastyboi-server --region ${{ secrets.AWS_REGION }}
+        run: aws ecs update-service --force-new-deployment --cluster tastyboi-server-cluster --service tastyboi-server --region ${{ secrets.AWS_REGION }}
