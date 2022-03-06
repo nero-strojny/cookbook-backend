@@ -35,7 +35,7 @@ type CalendarDeleter interface {
 }
 
 type CalendarUpdater interface {
-	UpdateCalendar(calendarID string, updatedCalendar models.Calendar) (models.Calendar, error)
+	UpdateCalendar(updatedCalendar models.Calendar) (models.Calendar, error)
 }
 
 type CalendarRepository struct {
@@ -75,9 +75,8 @@ func (c CalendarRepository) CreateCalendar(calendar models.Calendar) (models.Cal
 	return calendar, nil
 }
 
-func (c CalendarRepository) UpdateCalendar(calendarID string, updatedCalendar models.Calendar) (models.Calendar, error) {
-	id, _ := primitive.ObjectIDFromHex(calendarID)
-	filter := bson.M{"_id": id}
+func (c CalendarRepository) UpdateCalendar(updatedCalendar models.Calendar) (models.Calendar, error) {
+	filter := bson.M{"_id": updatedCalendar.CalendarID}
 	opts := options.Replace().SetUpsert(true)
 	result, err := c.calendarCollection.ReplaceOne(context.Background(), filter, updatedCalendar, opts)
 	if err != nil {
@@ -85,8 +84,6 @@ func (c CalendarRepository) UpdateCalendar(calendarID string, updatedCalendar mo
 	}
 	if result.UpsertedID != nil {
 		updatedCalendar.CalendarID = result.UpsertedID.(primitive.ObjectID)
-	} else {
-		updatedCalendar.CalendarID, _ = primitive.ObjectIDFromHex(calendarID)
 	}
 	return updatedCalendar, nil
 }

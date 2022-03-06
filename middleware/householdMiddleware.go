@@ -100,10 +100,10 @@ func (hm HouseholdMiddleware) GetCalendar(w http.ResponseWriter, r *http.Request
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		params := mux.Vars(r)
+		startDate := r.URL.Query().Get("startDate")
 		bearerToken := r.Header.Get("Authorization")
 		currentUser, _ := hm.um.repository.GetUserByAccessToken(strings.ReplaceAll(bearerToken, "Bearer ", ""))
-		payload, err := hm.controller.GetCalendar(currentUser.HouseholdId, params["startDate"], hm.calendarRepo)
+		payload, err := hm.controller.GetCalendar(currentUser.HouseholdId, startDate, hm.calendarRepo)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
