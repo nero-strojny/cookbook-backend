@@ -42,4 +42,3 @@ func (ic IngredientController) GetIngredient(ingredientID string, repository db.
 func (ic IngredientController) QueryIngredient(prefixIngredient string, repository db.IngredientGetter) ([]models.Ingredient, error) {
 	return repository.QueryIngredients(prefixIngredient)
 }
-

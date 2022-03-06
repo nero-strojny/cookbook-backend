@@ -13,12 +13,12 @@ import (
 )
 
 type RecipeMiddleware struct {
-	auth AuthMiddleware
+	auth       AuthMiddleware
 	controller controller.RecipeControl
 	repository db.RecipeDB
 }
 
-func NewRecipeMiddleware(auth AuthMiddleware, controller controller.RecipeController, r db.RecipeDB ) RecipeMiddleware {
+func NewRecipeMiddleware(auth AuthMiddleware, controller controller.RecipeController, r db.RecipeDB) RecipeMiddleware {
 	return RecipeMiddleware{auth, controller, r}
 }
 

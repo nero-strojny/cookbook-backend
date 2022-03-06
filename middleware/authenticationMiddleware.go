@@ -8,7 +8,7 @@ import (
 )
 
 type AuthMiddleware struct {
-	ac controller.AuthControl
+	ac         controller.AuthControl
 	repository db.UserDB
 }
 
