@@ -63,7 +63,7 @@ func (rc RecipeController) UpdateRecipe(recipeID string, updatedRecipe models.Re
 func (rc RecipeController) GetRandomRecipes(numberOfRecipes int, repository db.RecipeGetter) ([]models.Recipe, error) {
 	var emptyResults []models.Recipe
 	itemCount, err := repository.CountRecipes()
-	if err != nil  {
+	if err != nil {
 		return emptyResults, err
 	}
 	if numberOfRecipes > int(itemCount) {
@@ -135,7 +135,6 @@ func (rc RecipeController) PostPaginatedRecipes(paginatedRequest models.Paginate
 func (rc RecipeController) GetRecipe(recipeID string, repository db.RecipeGetter) (models.Recipe, error) {
 	return repository.GetRecipe(recipeID)
 }
-
 
 func contains(recipeNumbers []int, recipeNumber int) bool {
 	for _, num := range recipeNumbers {

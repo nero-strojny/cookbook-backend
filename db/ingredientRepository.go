@@ -23,12 +23,10 @@ type IngredientGetter interface {
 
 type IngredientDeleter interface {
 	DeleteIngredient(ingredientID string) error
-
 }
 
 type IngredientCreator interface {
 	CreateIngredient(ingredient models.Ingredient) (models.Ingredient, error)
-
 }
 
 type IngredientRepository struct {
@@ -120,5 +118,3 @@ func decodeCurToIngredients(cur *mongo.Cursor) ([]models.Ingredient, error) {
 	cur.Close(context.Background())
 	return results, nil
 }
-
-

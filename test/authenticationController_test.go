@@ -15,8 +15,8 @@ func (m expiredUserGetter) GetUser(username string, email string) (models.User, 
 
 func (m expiredUserGetter) GetUserByAccessToken(token string) (models.User, error) {
 	return models.User{
-		UserName: "TestUser",
-		ExpiryDate: time.Date(2021, time.April, 13, 3, 3, 3, 3, time.UTC).Format("2006.01.02 15:04:05"),
+		UserName:    "TestUser",
+		ExpiryDate:  time.Date(2021, time.April, 13, 3, 3, 3, 3, time.UTC).Format("2006.01.02 15:04:05"),
 		AccessToken: token,
 	}, nil
 }
@@ -41,7 +41,7 @@ func TestNeedToken(t *testing.T) {
 	}
 }
 
-type nonAdminGetter struct {}
+type nonAdminGetter struct{}
 
 func (n nonAdminGetter) GetUser(username string, email string) (models.User, error) {
 	panic("implement me")
@@ -49,9 +49,9 @@ func (n nonAdminGetter) GetUser(username string, email string) (models.User, err
 
 func (n nonAdminGetter) GetUserByAccessToken(token string) (models.User, error) {
 	return models.User{
-		UserType: "normal",
+		UserType:    "normal",
 		AccessToken: "token",
-		ExpiryDate: time.Now().Add(5 * time.Hour).Format("2006.01.02 15:04:05"),
+		ExpiryDate:  time.Now().Add(5 * time.Hour).Format("2006.01.02 15:04:05"),
 	}, nil
 }
 
@@ -75,9 +75,9 @@ func (v validUserGetter) GetUser(username string, email string) (models.User, er
 
 func (v validUserGetter) GetUserByAccessToken(token string) (models.User, error) {
 	return models.User{
-		UserType: "normal",
+		UserType:    "normal",
 		AccessToken: "token",
-		ExpiryDate: time.Now().Add(5 * time.Hour).Format("2006.01.02 15:04:05"),
+		ExpiryDate:  time.Now().Add(5 * time.Hour).Format("2006.01.02 15:04:05"),
 	}, nil
 }
 

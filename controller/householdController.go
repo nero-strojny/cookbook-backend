@@ -17,7 +17,6 @@ type HouseholdControl interface {
 }
 
 type HouseholdController struct {
-
 }
 
 func NewHouseholdController() HouseholdController {

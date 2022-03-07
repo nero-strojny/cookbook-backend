@@ -13,7 +13,7 @@ import (
 
 const (
 	from     = "tasty.boi.shopping.list@gmail.com"
-	subject = "Subject: Grocery List\r\n\r\n"
+	subject  = "Subject: Grocery List\r\n\r\n"
 	smtpHost = "smtp.gmail.com"
 	smtpPort = "587"
 )
@@ -92,8 +92,6 @@ func (uc UserController) GenerateUserToken(authData models.AuthData, repository 
 
 	return user.AccessToken, nil
 }
-
-
 
 func (uc UserController) EmailUser(basket models.Basket, token string, repository db.UserGetter) error {
 	userEmail, err := uc.lookUpUserEmail(token, repository)

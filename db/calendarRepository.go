@@ -94,4 +94,3 @@ func (c CalendarRepository) UpdateCalendar(calendarID string, updatedCalendar mo
 func (c CalendarRepository) DeleteCalendar(householdID string) error {
 	panic("implement me")
 }
-

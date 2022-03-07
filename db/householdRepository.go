@@ -72,9 +72,3 @@ func (h HouseholdRepository) DeleteHousehold(householdID string) error {
 	}
 	return nil
 }
-
-
-
-
-
-

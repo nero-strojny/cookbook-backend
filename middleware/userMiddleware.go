@@ -14,11 +14,10 @@ import (
 )
 
 type UserMiddleware struct {
-	auth AuthMiddleware
+	auth       AuthMiddleware
 	Controller controller.UserControl
 	repository db.UserDB
 }
-
 
 func NewUserMiddleware(auth AuthMiddleware, controller controller.UserController, db db.UserDB) UserMiddleware {
 	return UserMiddleware{auth, controller, db}
