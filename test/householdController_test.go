@@ -63,15 +63,15 @@ func (m mockCalendarGetterUpdater) GetCalendar(householdID string, startDate str
 	return calendar, nil
 }
 
-func (m mockCalendarGetterUpdater) UpdateCalendar(calendarID string, updatedCalendar models.Calendar) (models.Calendar, error) {
-
+func (m mockCalendarGetterUpdater) UpdateCalendar(updatedCalendar models.Calendar) (models.Calendar, error) {
 	return models.Calendar{CalendarID: updatedCalendar.CalendarID, Monday: updatedCalendar.Monday}, nil
 }
 
 func TestUpdateCalendar(t *testing.T) {
 	hc := controller.NewHouseholdController()
 	newMonday, _ := primitive.ObjectIDFromHex("333333333333333333333333")
-	newCalendar := models.Calendar{Monday: newMonday}
+	calendarID, _ := primitive.ObjectIDFromHex("111111111111111111111111")
+	newCalendar := models.Calendar{CalendarID: calendarID, Monday: newMonday}
 	calendar, _ := hc.UpdateCalendar("testHousehold", newCalendar, mockCalendarGetterUpdater{})
 	if calendar.CalendarID.Hex() != "111111111111111111111111" {
 		t.Fatalf("Update changed calendarID, expected originalID but got %s", calendar.CalendarID.Hex())
