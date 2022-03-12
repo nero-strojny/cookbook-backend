@@ -81,8 +81,8 @@ func (r TastyBoiRouter) Route() *mux.Router {
 	router.HandleFunc("/api/household/{id}/user", r.hm.AddUserToHousehold).Methods("PUT")
 	router.HandleFunc("/api/household/{id}/user", middleware.Options).Methods("OPTIONS")
 
-	router.HandleFunc("/api/calendar/", r.hm.GetCalendar).Queries("startDate", "{startDate}").Methods("GET")
-	router.HandleFunc("/api/calendar/", middleware.Options).Queries("startDate", "{startDate}").Methods("OPTIONS")
+	router.HandleFunc("/api/calendar", r.hm.GetCalendar).Queries("startDate", "{startDate}").Methods("GET")
+	router.HandleFunc("/api/calendar", middleware.Options).Methods("OPTIONS")
 
 	router.HandleFunc("/api/calendar", r.hm.CreateCalendar).Methods("POST")
 	router.HandleFunc("/api/calendar/{id}", r.hm.UpdateCalendar).Methods("PUT")
