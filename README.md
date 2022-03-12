@@ -12,7 +12,7 @@
 ## Testing
 
 - run `go get github.com/stretchr/testify/assert`
-- run `go test -v ./test -DB_STRING "<DB_STRING>" -ENV "dev"`
+- run `go test -v ./test`
 
 ## Development:
 
