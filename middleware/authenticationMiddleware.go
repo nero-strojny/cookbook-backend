@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+type AuthHandler interface {
+	AuthenticateUser(response http.ResponseWriter, request *http.Request, isAdmin bool) error
+	AuthenticateSpecificUser(response http.ResponseWriter, request *http.Request, userInfo string) error
+}
+
 type AuthMiddleware struct {
 	ac         controller.AuthControl
 	repository db.UserDB
@@ -25,8 +30,6 @@ func (am AuthMiddleware) AuthenticateUser(response http.ResponseWriter, request 
 		} else {
 			response.WriteHeader(http.StatusUnauthorized)
 		}
-	} else {
-		response.WriteHeader(http.StatusOK)
 	}
 	return userErr
 }

@@ -6,6 +6,10 @@ import (
 	"server/controller"
 )
 
+type ServerHandler interface {
+	HealthCheck(w http.ResponseWriter, r *http.Request)
+}
+
 type ServerMiddleware struct {
 	controller controller.ServerControl
 }

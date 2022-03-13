@@ -13,6 +13,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type HouseholdHandler interface {
+	CreateHousehold(w http.ResponseWriter, r *http.Request)
+	GetHousehold(w http.ResponseWriter, r *http.Request)
+	AddUserToHousehold(w http.ResponseWriter, r *http.Request)
+	GetCalendar(w http.ResponseWriter, r *http.Request)
+	UpdateCalendar(w http.ResponseWriter, r *http.Request)
+	CreateCalendar(w http.ResponseWriter, r *http.Request)
+}
 type HouseholdMiddleware struct {
 	auth         AuthMiddleware
 	um           UserMiddleware

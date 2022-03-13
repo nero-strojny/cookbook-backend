@@ -11,13 +11,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type IngredientHandler interface {
+	CreateIngredient(w http.ResponseWriter, r *http.Request)
+	GetIngredient(w http.ResponseWriter, r *http.Request)
+	QueryIngredient(w http.ResponseWriter, r *http.Request)
+	DeleteIngredient(w http.ResponseWriter, r *http.Request)
+}
+
 type IngredientMiddleware struct {
-	auth       AuthMiddleware
+	auth       AuthHandler
 	controller controller.IngredientControl
 	repository db.IngredientDB
 }
 
-func NewIngredientMiddleware(auth AuthMiddleware, controller controller.IngredientController, r db.IngredientDB) IngredientMiddleware {
+func NewIngredientMiddleware(auth AuthHandler, controller controller.IngredientControl, r db.IngredientDB) IngredientMiddleware {
 	return IngredientMiddleware{auth, controller, r}
 }
 

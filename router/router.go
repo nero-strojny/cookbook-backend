@@ -7,18 +7,18 @@ import (
 )
 
 type TastyBoiRouter struct {
-	um middleware.UserMiddleware
-	rm middleware.RecipeMiddleware
-	im middleware.IngredientMiddleware
-	sm middleware.ServerMiddleware
-	hm middleware.HouseholdMiddleware
+	um middleware.UserHandler
+	rm middleware.RecipeHandler
+	im middleware.IngredientHandler
+	sm middleware.ServerHandler
+	hm middleware.HouseholdHandler
 }
 
-func NewTastyBoiRouter(um middleware.UserMiddleware,
-	rm middleware.RecipeMiddleware,
-	im middleware.IngredientMiddleware,
-	sm middleware.ServerMiddleware,
-	hm middleware.HouseholdMiddleware) TastyBoiRouter {
+func NewTastyBoiRouter(um middleware.UserHandler,
+	rm middleware.RecipeHandler,
+	im middleware.IngredientHandler,
+	sm middleware.ServerHandler,
+	hm middleware.HouseholdHandler) TastyBoiRouter {
 	return TastyBoiRouter{um, rm, im, sm, hm}
 }
 

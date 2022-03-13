@@ -12,6 +12,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type RecipeHandler interface {
+	PostPaginatedRecipes(w http.ResponseWriter, r *http.Request)
+	GetRecipe(w http.ResponseWriter, r *http.Request)
+	GetRandomRecipes(w http.ResponseWriter, r *http.Request)
+	CreateRecipe(w http.ResponseWriter, r *http.Request)
+	UpdateRecipe(w http.ResponseWriter, r *http.Request)
+	DeleteRecipe(w http.ResponseWriter, r *http.Request)
+}
+
 type RecipeMiddleware struct {
 	auth       AuthMiddleware
 	controller controller.RecipeControl

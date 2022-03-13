@@ -13,6 +13,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type UserHandler interface {
+	CreateUser(w http.ResponseWriter, r *http.Request)
+	UpdateUserPassword(w http.ResponseWriter, r *http.Request)
+	DeleteUser(w http.ResponseWriter, r *http.Request)
+	GetUsers(w http.ResponseWriter, r *http.Request)
+	GenerateUserToken(w http.ResponseWriter, r *http.Request)
+	EmailUser(w http.ResponseWriter, r *http.Request)
+}
+
 type UserMiddleware struct {
 	auth       AuthMiddleware
 	Controller controller.UserControl
