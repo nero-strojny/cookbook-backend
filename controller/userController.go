@@ -83,6 +83,8 @@ func (uc UserController) GenerateUserToken(authData models.AuthData, repository 
 	hashErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(authData.Password))
 	if hashErr != nil {
 		user.AccessToken = ""
+		repository.UpdateToken(user)
+		return user.AccessToken, errors.New("failed authentication, unknown user or password")
 	} else {
 		user.AccessToken = stringWithCharset(32)
 		user.ExpiryDate = expiryTime.Format("2006.01.02 15:04:05")
