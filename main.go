@@ -83,10 +83,19 @@ func main() {
 	fmt.Println("Starting server on the port 8080...")
 	// Create Server object
 	server := &http.Server{
+<<<<<<< HEAD
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 5 * time.Second,
 		Addr:         ":8080",
 		Handler:      r,
+=======
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      5 * time.Second,
+		IdleTimeout:       30 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		Addr:              ":8080",
+		Handler:           http.TimeoutHandler(r, 10*time.Second, "Request Timeout\n"),
+>>>>>>> 81ef4ef229e983d295fe902f85720b28d291418f
 	}
 	server.ListenAndServe()
 	// Start server
