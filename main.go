@@ -50,17 +50,17 @@ func main() {
 
 	// Get controllers with their associated DB connections
 	var userController = controller.NewUserController()
-	var recipeController = controller.NewRecipeController()
+	var recipeController = controller.NewRecipeController(db.NewRecipeRepository(mongoClient))
 	var ingredientController = controller.NewIngredientController()
 	// Check this one since it calls NewUserRepository a second time
 	var authController = controller.NewAuthenticationController()
 	var serverController = controller.NewServerController(mongoClient)
-	var householdController = controller.NewHouseholdController()
+	var householdController = controller.NewHouseholdController(db.NewCalendarRepository(mongoClient), db.NewHouseholdRepository(mongoClient), recipeController)
 
 	// Get middleware wrapping their controllers
 	var authMiddleware = middleware.NewAuthMiddleware(authController, db.NewUserRepository(mongoClient))
 	var userMiddleware = middleware.NewUserMiddleware(authMiddleware, userController, db.NewUserRepository(mongoClient))
-	var recipeMiddleware = middleware.NewRecipeMiddleware(authMiddleware, recipeController, db.NewRecipeRepository(mongoClient))
+	var recipeMiddleware = middleware.NewRecipeMiddleware(authMiddleware, recipeController)
 	var ingredientMiddleware = middleware.NewIngredientMiddleware(authMiddleware, ingredientController, db.NewIngredientRepository(mongoClient))
 	var serverMiddleware = middleware.NewServerMiddleware(serverController)
 	var householdMiddleware = middleware.NewHouseholdMiddleware(authMiddleware,
@@ -73,13 +73,13 @@ func main() {
 	// to more cleanly manage it
 
 	// Build router from middleware
-	var router = router.NewTastyBoiRouter(userMiddleware, recipeMiddleware, ingredientMiddleware, serverMiddleware, householdMiddleware)
+	var tastyRouter = router.NewTastyBoiRouter(userMiddleware, recipeMiddleware, ingredientMiddleware, serverMiddleware, householdMiddleware)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Use router to build routes with middleware
-	r := router.Route()
+	r := tastyRouter.Route()
 	fmt.Println("Starting server on the port 8080...")
 	// Create Server object
 	server := &http.Server{

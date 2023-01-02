@@ -3,7 +3,6 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
-	"server/db"
 	"strconv"
 
 	"server/controller"
@@ -15,11 +14,10 @@ import (
 type RecipeMiddleware struct {
 	auth       AuthMiddleware
 	controller controller.RecipeControl
-	repository db.RecipeDB
 }
 
-func NewRecipeMiddleware(auth AuthMiddleware, controller controller.RecipeController, r db.RecipeDB) RecipeMiddleware {
-	return RecipeMiddleware{auth, controller, r}
+func NewRecipeMiddleware(auth AuthMiddleware, controller controller.RecipeController) RecipeMiddleware {
+	return RecipeMiddleware{auth, controller}
 }
 
 // PostPaginateRecipes controller POST request
@@ -32,7 +30,7 @@ func (rm RecipeMiddleware) PostPaginatedRecipes(w http.ResponseWriter, r *http.R
 	} else {
 		var paginatedRequest models.PaginatedRecipeRequest
 		_ = json.NewDecoder(r.Body).Decode(&paginatedRequest)
-		payload, err := rm.controller.PostPaginatedRecipes(paginatedRequest, rm.repository)
+		payload, err := rm.controller.PostPaginatedRecipes(paginatedRequest)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
@@ -51,7 +49,7 @@ func (rm RecipeMiddleware) GetRecipe(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		params := mux.Vars(r)
-		payload, err := rm.controller.GetRecipe(params["id"], rm.repository)
+		payload, err := rm.controller.GetRecipe(params["id"])
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -74,7 +72,7 @@ func (rm RecipeMiddleware) GetRandomRecipes(w http.ResponseWriter, r *http.Reque
 		if convertErr != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
-			payload, err := rm.controller.GetRandomRecipes(i, rm.repository)
+			payload, err := rm.controller.GetRandomRecipes(i)
 			if err != nil {
 				w.WriteHeader(http.StatusNotFound)
 			} else {
@@ -95,7 +93,7 @@ func (rm RecipeMiddleware) CreateRecipe(w http.ResponseWriter, r *http.Request) 
 	} else {
 		var recipe models.Recipe
 		_ = json.NewDecoder(r.Body).Decode(&recipe)
-		payload, invalidFields, err := rm.controller.CreateRecipe(recipe, rm.repository)
+		payload, invalidFields, err := rm.controller.CreateRecipe(recipe)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			if len(invalidFields) > 0 {
@@ -113,7 +111,7 @@ func (rm RecipeMiddleware) UpdateRecipe(w http.ResponseWriter, r *http.Request) 
 	writeCommonHeaders(w)
 	params := mux.Vars(r)
 	w.Header().Set("Access-Control-Allow-Methods", "PUT")
-	getPayload, getErr := rm.controller.GetRecipe(params["id"], rm.repository)
+	getPayload, getErr := rm.controller.GetRecipe(params["id"])
 	if getErr != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -123,7 +121,7 @@ func (rm RecipeMiddleware) UpdateRecipe(w http.ResponseWriter, r *http.Request) 
 	} else {
 		var recipe models.Recipe
 		json.NewDecoder(r.Body).Decode(&recipe)
-		payload, err := rm.controller.UpdateRecipe(params["id"], recipe, rm.repository)
+		payload, err := rm.controller.UpdateRecipe(params["id"], recipe)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
@@ -137,7 +135,7 @@ func (rm RecipeMiddleware) DeleteRecipe(w http.ResponseWriter, r *http.Request) 
 	writeCommonHeaders(w)
 	params := mux.Vars(r)
 	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
-	getPayload, getErr := rm.controller.GetRecipe(params["id"], rm.repository)
+	getPayload, getErr := rm.controller.GetRecipe(params["id"])
 	if getErr != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -145,7 +143,7 @@ func (rm RecipeMiddleware) DeleteRecipe(w http.ResponseWriter, r *http.Request) 
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		err := rm.controller.DeleteRecipe(params["id"], rm.repository)
+		err := rm.controller.DeleteRecipe(params["id"])
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {

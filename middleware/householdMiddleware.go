@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"encoding/json"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"server/db"
 	"strings"
@@ -37,7 +36,7 @@ func (hm HouseholdMiddleware) CreateHousehold(w http.ResponseWriter, r *http.Req
 	} else {
 		var requestedHousehold models.Household
 		_ = json.NewDecoder(r.Body).Decode(&requestedHousehold)
-		payload, err := hm.controller.CreateHousehold(requestedHousehold, currentUser, hm.repository)
+		payload, err := hm.controller.CreateHousehold(requestedHousehold, currentUser)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
@@ -60,7 +59,7 @@ func (hm HouseholdMiddleware) GetHousehold(w http.ResponseWriter, r *http.Reques
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
 		params := mux.Vars(r)
-		payload, err := hm.controller.GetHousehold(params["id"], hm.repository)
+		payload, err := hm.controller.GetHousehold(params["id"])
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -74,7 +73,7 @@ func (hm HouseholdMiddleware) AddUserToHousehold(w http.ResponseWriter, r *http.
 	writeCommonHeaders(w)
 	params := mux.Vars(r)
 	w.Header().Set("Access-Control-Allow-Methods", "PUT")
-	getPayload, getErr := hm.controller.GetHousehold(params["id"], hm.repository)
+	getPayload, getErr := hm.controller.GetHousehold(params["id"])
 	if getErr != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -103,7 +102,7 @@ func (hm HouseholdMiddleware) GetCalendar(w http.ResponseWriter, r *http.Request
 		startDate := r.URL.Query().Get("startDate")
 		bearerToken := r.Header.Get("Authorization")
 		currentUser, _ := hm.um.repository.GetUserByAccessToken(strings.ReplaceAll(bearerToken, "Bearer ", ""))
-		payload, err := hm.controller.GetCalendar(currentUser.HouseholdId, startDate, hm.calendarRepo)
+		payload, err := hm.controller.GetCalendar(currentUser.HouseholdId, startDate)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -124,7 +123,7 @@ func (hm HouseholdMiddleware) UpdateCalendar(w http.ResponseWriter, r *http.Requ
 		_ = json.NewDecoder(r.Body).Decode(&updatedCalendar)
 		bearerToken := r.Header.Get("Authorization")
 		currentUser, _ := hm.um.repository.GetUserByAccessToken(strings.ReplaceAll(bearerToken, "Bearer ", ""))
-		payload, err := hm.controller.UpdateCalendar(currentUser.HouseholdId, updatedCalendar, hm.calendarRepo)
+		payload, err := hm.controller.UpdateCalendar(currentUser.HouseholdId, updatedCalendar)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
@@ -140,12 +139,12 @@ func (hm HouseholdMiddleware) CreateCalendar(w http.ResponseWriter, r *http.Requ
 	if userErr != nil {
 		json.NewEncoder(w).Encode(userErr.Error())
 	} else {
-		var calendar models.Calendar
-		_ = json.NewDecoder(r.Body).Decode(&calendar)
 		bearerToken := r.Header.Get("Authorization")
 		user, _ := hm.um.repository.GetUserByAccessToken(strings.ReplaceAll(bearerToken, "Bearer ", ""))
-		calendar.HouseholdID, _ = primitive.ObjectIDFromHex(user.HouseholdId)
-		payload, err := hm.controller.CreateCalendar(calendar, hm.calendarRepo)
+		// Should this be a separate model, something like CalendarCreateRequest that only has the StartDate?
+		var calendar models.Calendar
+		json.NewDecoder(r.Body).Decode(&calendar)
+		payload, err := hm.controller.CreateCalendar(calendar.StartDate, user.HouseholdId)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {

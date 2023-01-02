@@ -9,23 +9,24 @@ import (
 )
 
 type RecipeControl interface {
-	CreateRecipe(recipe models.Recipe, repository db.RecipeCreator) (models.Recipe, []string, error)
-	DeleteRecipe(recipeID string, repository db.RecipeDeleter) error
-	UpdateRecipe(recipeID string, updatedRecipe models.Recipe, repository db.RecipeUpdater) (models.Recipe, error)
-	GetRandomRecipes(numberOfRecipes int, repository db.RecipeGetter) ([]models.Recipe, error)
-	PostPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest, repository db.RecipeGetter) (models.PaginatedRecipeResponse, error)
-	GetRecipe(recipeID string, repository db.RecipeGetter) (models.Recipe, error)
+	CreateRecipe(recipe models.Recipe) (models.Recipe, []string, error)
+	DeleteRecipe(recipeID string) error
+	UpdateRecipe(recipeID string, updatedRecipe models.Recipe) (models.Recipe, error)
+	GetRandomRecipes(numberOfRecipes int) ([]models.Recipe, error)
+	PostPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) (models.PaginatedRecipeResponse, error)
+	GetRecipe(recipeID string) (models.Recipe, error)
 }
 
 type RecipeController struct {
+	recipeRepo db.RecipeDB
 }
 
-func NewRecipeController() RecipeController {
-	return RecipeController{}
+func NewRecipeController(rr db.RecipeDB) RecipeController {
+	return RecipeController{recipeRepo: rr}
 }
 
 //CreateRecipe a new recipe
-func (rc RecipeController) CreateRecipe(recipe models.Recipe, repository db.RecipeCreator) (models.Recipe, []string, error) {
+func (rc RecipeController) CreateRecipe(recipe models.Recipe) (models.Recipe, []string, error) {
 	currentTime := time.Now()
 	recipe.CreatedDate = currentTime.Format("2006.01.02 15:04:05")
 	recipe.LastUpdatedDate = currentTime.Format("2006.01.02 15:04:05")
@@ -33,7 +34,7 @@ func (rc RecipeController) CreateRecipe(recipe models.Recipe, repository db.Reci
 	if !valid {
 		return models.Recipe{}, invalidFields, errors.New("invalid fields")
 	}
-	err := repository.CreateRecipe(&recipe)
+	err := rc.recipeRepo.CreateRecipe(&recipe)
 
 	if err != nil {
 		return models.Recipe{}, invalidFields, err
@@ -43,16 +44,16 @@ func (rc RecipeController) CreateRecipe(recipe models.Recipe, repository db.Reci
 }
 
 //DeleteRecipe - deletes a recipe by its ID.
-func (rc RecipeController) DeleteRecipe(recipeID string, repository db.RecipeDeleter) error {
-	err := repository.DeleteRecipe(recipeID)
+func (rc RecipeController) DeleteRecipe(recipeID string) error {
+	err := rc.recipeRepo.DeleteRecipe(recipeID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rc RecipeController) UpdateRecipe(recipeID string, updatedRecipe models.Recipe, repository db.RecipeUpdater) (models.Recipe, error) {
-	recipe, err := repository.UpdateRecipe(recipeID, updatedRecipe)
+func (rc RecipeController) UpdateRecipe(recipeID string, updatedRecipe models.Recipe) (models.Recipe, error) {
+	recipe, err := rc.recipeRepo.UpdateRecipe(recipeID, updatedRecipe)
 	if err != nil {
 		return models.Recipe{}, err
 	}
@@ -60,9 +61,9 @@ func (rc RecipeController) UpdateRecipe(recipeID string, updatedRecipe models.Re
 }
 
 // GetRandomRecipes - returns a slice of random recipes
-func (rc RecipeController) GetRandomRecipes(numberOfRecipes int, repository db.RecipeGetter) ([]models.Recipe, error) {
+func (rc RecipeController) GetRandomRecipes(numberOfRecipes int) ([]models.Recipe, error) {
 	var emptyResults []models.Recipe
-	itemCount, err := repository.CountRecipes()
+	itemCount, err := rc.recipeRepo.CountRecipes()
 	if err != nil {
 		return emptyResults, err
 	}
@@ -94,7 +95,7 @@ func (rc RecipeController) GetRandomRecipes(numberOfRecipes int, repository db.R
 			PageSize:    int64(pageSize),
 			QueryRecipe: models.Recipe{},
 		}
-		recipes, getErr := repository.GetPaginatedRecipes(paginatedRequest)
+		recipes, getErr := rc.recipeRepo.GetPaginatedRecipes(paginatedRequest)
 		if getErr != nil {
 			return emptyResults, err
 		}
@@ -104,8 +105,8 @@ func (rc RecipeController) GetRandomRecipes(numberOfRecipes int, repository db.R
 }
 
 //PostPaginateRecipes - gets all recipes
-func (rc RecipeController) PostPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest, repository db.RecipeGetter) (models.PaginatedRecipeResponse, error) {
-	itemNumber, countErr := repository.GetFilteredRecipeCount(paginatedRequest)
+func (rc RecipeController) PostPaginatedRecipes(paginatedRequest models.PaginatedRecipeRequest) (models.PaginatedRecipeResponse, error) {
+	itemNumber, countErr := rc.recipeRepo.GetFilteredRecipeCount(paginatedRequest)
 	if countErr != nil {
 		return models.PaginatedRecipeResponse{}, countErr
 	}
@@ -117,7 +118,7 @@ func (rc RecipeController) PostPaginatedRecipes(paginatedRequest models.Paginate
 			PageSize:        paginatedRequest.PageSize,
 		}, nil
 	}
-	recipes, getErr := repository.GetPaginatedRecipes(paginatedRequest)
+	recipes, getErr := rc.recipeRepo.GetPaginatedRecipes(paginatedRequest)
 
 	if getErr != nil {
 		return models.PaginatedRecipeResponse{}, getErr
@@ -132,8 +133,8 @@ func (rc RecipeController) PostPaginatedRecipes(paginatedRequest models.Paginate
 }
 
 //GetRecipe - gets recipes by its ID
-func (rc RecipeController) GetRecipe(recipeID string, repository db.RecipeGetter) (models.Recipe, error) {
-	return repository.GetRecipe(recipeID)
+func (rc RecipeController) GetRecipe(recipeID string) (models.Recipe, error) {
+	return rc.recipeRepo.GetRecipe(recipeID)
 }
 
 func contains(recipeNumbers []int, recipeNumber int) bool {
