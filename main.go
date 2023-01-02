@@ -4,8 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
 	"server/config"
@@ -13,6 +11,10 @@ import (
 	"server/db"
 	"server/middleware"
 	"server/router"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -79,6 +81,16 @@ func main() {
 	// Use router to build routes with middleware
 	r := router.Route()
 	fmt.Println("Starting server on the port 8080...")
+	// Create Server object
+	server := &http.Server{
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      5 * time.Second,
+		IdleTimeout:       30 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		Addr:              ":8080",
+		Handler:           http.TimeoutHandler(r, 10*time.Second, "Request Timeout\n"),
+	}
+	server.ListenAndServe()
 	// Start server
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(server.ListenAndServe())
 }
