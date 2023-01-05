@@ -90,5 +90,5 @@ func main() {
 	}
 	server.ListenAndServe()
 	// Start server
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(server.ListenAndServe())
 }
