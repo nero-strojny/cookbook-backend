@@ -23,7 +23,28 @@ func NewUserMiddleware(auth AuthMiddleware, controller controller.UserController
 	return UserMiddleware{auth, controller, db}
 }
 
-// UpdateUserPassword updates a user's password in the database
+//CreateUser creates a new user in the database
+func (um UserMiddleware) CreateUser(w http.ResponseWriter, r *http.Request) {
+	writeCommonHeaders(w)
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	var requestedUser models.RequestedUser
+	_ = json.NewDecoder(r.Body).Decode(&requestedUser)
+	if requestedUser.Email == "" || requestedUser.Password == "" || requestedUser.UserName == "" {
+		http.Error(w, "Required fields not included", http.StatusBadRequest)
+	} else if !requestedUser.AgreedToTerms {
+		http.Error(w, "User has not agreed to terms", http.StatusBadRequest)
+	} else {
+		payload, err := um.Controller.CreateUser(requestedUser, um.repository)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(payload.UserName)
+		}
+	}
+}
+
+//UpdateUserPassword updates a user's password in the database
 func (um UserMiddleware) UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "PUT")
@@ -74,7 +95,7 @@ func (um UserMiddleware) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GenerateUserToken refreshes a token
+//GenerateUserToken refreshes a token
 func (um UserMiddleware) GenerateUserToken(w http.ResponseWriter, r *http.Request) {
 	writeCommonHeaders(w)
 	w.Header().Set("Access-Control-Allow-Methods", "POST")

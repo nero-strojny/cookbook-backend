@@ -3,16 +3,17 @@ package db
 import (
 	"context"
 	"errors"
-	"server/models"
-
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
+	"server/models"
 )
 
 type UserDB interface {
 	UserGetter
+	UserCreator
 	UserDeleter
 	UserUpdater
 }
@@ -26,6 +27,10 @@ type UserGetter interface {
 	GetUser(username string, email string) (models.User, error)
 	GetUserByAccessToken(token string) (models.User, error)
 	GetAllUsers() ([]models.User, error)
+}
+
+type UserCreator interface {
+	CreateUser(userInformation models.RequestedUser) (models.User, error)
 }
 
 type UserDeleter interface {
@@ -112,6 +117,32 @@ func (ur UserRepository) DeleteUser(username string) error {
 		return errors.New("nothing was deleted")
 	}
 	return nil
+}
+
+func (ur UserRepository) CreateUser(userInformation models.RequestedUser) (models.User, error) {
+	user := models.User{}
+	filter := bson.M{"$or": []bson.M{{"username": userInformation.UserName}, {"email": userInformation.Email}}}
+	getErr := ur.userCollection.FindOne(context.Background(), filter).Decode(&user)
+	if getErr != nil {
+		insertedUser := models.User{}
+		insertedUser.UserName = userInformation.UserName
+		insertedUser.UserType = userInformation.UserType
+		insertedUser.Email = userInformation.Email
+		bytes, err := bcrypt.GenerateFromPassword([]byte(userInformation.Password), 14)
+		if err != nil {
+			return models.User{}, err
+		}
+		insertedUser.PasswordHash = string(bytes)
+		result, insertErr := ur.userCollection.InsertOne(context.Background(), insertedUser)
+
+		if insertErr != nil {
+			return models.User{}, insertErr
+		}
+
+		insertedUser.UserID = result.InsertedID.(primitive.ObjectID)
+		return insertedUser, nil
+	}
+	return models.User{}, errors.New("username or email already in use")
 }
 
 func (ur UserRepository) GetAllUsers() ([]models.User, error) {
