@@ -6,5 +6,5 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/stretchr/testify v1.7.0 // indirect
 	go.mongodb.org/mongo-driver v1.7.1
-	golang.org/x/crypto v0.1.0
+	golang.org/x/crypto v0.17.0
 )
